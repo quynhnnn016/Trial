@@ -26,6 +26,47 @@ function getCompareList() {
     return JSON.parse(localStorage.getItem('compareList')) || [];
 }
 
+//Các hàm helper cho localStorage
+function getFavoriteList() {
+    return JSON.parse(localStorage.getItem('favoriteList')) || [];
+}
+
+function getCartList() {
+    return JSON.parse(localStorage.getItem('cartList')) || [];
+}
+
+//Hàm cập nhật Sidebar
+function updateSidebar() {
+    // Lấy 3 danh sách từ localStorage
+    const compareList = getCompareList();
+    const favoriteList = getFavoriteList();
+    const cartList = getCartList();
+
+    // Lấy 3 vị trí trên HTML
+    const compareContainer = document.getElementById('compare-sidebar-list');
+    const favoriteContainer = document.getElementById('favorite-sidebar-list');
+    const cartContainer = document.getElementById('cart-sidebar-list');
+
+    // Hàm trợ giúp để render danh sách
+    const renderList = (container, list, placeholder) => {
+        container.innerHTML = ''; // Xóa nội dung cũ
+        if (list.length === 0) {
+            container.innerHTML = `<li class="list-group-item text-muted">${placeholder}</li>`;
+            return;
+        }
+        list.forEach(productId => {
+            const product = allShopProducts.find(p => p.id === productId);
+            if (product) {
+                container.innerHTML += `<li class="list-group-item small">${product.name}</li>`;
+            }
+        });
+    };
+
+    // Render cả 3 danh sách
+    renderList(compareContainer, compareList, 'Chưa chọn sản phẩm so sánh...');
+    renderList(favoriteContainer, favoriteList, 'Chưa thích sản phẩm nào...');
+    renderList(cartContainer, cartList, 'Giỏ hàng trống...');
+}
 /**
  * Saves the list of product IDs to localStorage.
  * Also triggers an update of the compare count badge.
@@ -67,40 +108,56 @@ async function loadAllProducts() {
 
     try {
         // Load the JSON file containing ALL products
-        const response = await fetch('./data/products.json');
+        const response = await fetch('./data/products_100.json');
         if (!response.ok) {
             throw new Error(`Failed to load products.json: ${response.statusText}`);
         }
 
-        allShopProducts = await response.json(); // Store all products globally for potential future use
         const compareList = getCompareList();
+        const favoriteList = getFavoriteList();
+
+        allShopProducts = await response.json(); // Store all products globally for potential future use
 
         container.innerHTML = ''; // Clear old content
 
         allShopProducts.forEach(product => {
             // Check if the product is already in the comparison list
-            const isAdded = compareList.includes(product.id);
+            const isCompareSelected = compareList.includes(product.id);
+            const isFavoriteSelected = favoriteList.includes(product.id);
 
             const productCardHTML = `
-                <div class="col-lg-4 col-md-6 mb-4">
-                    <div class="card product-card h-100" id="card-${product.id}">
-                        <img src="${product.image}" class="card-img-top" alt="${product.name}">
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title">${product.name}</h5>
-                            <p class="card-text text-muted">${product.specs.cpu}, ${product.specs.ram}</p>
-                            <p class="card-text fw-bold fs-5 mt-auto">${product.price}</p>
-                            <button
-                                class="btn ${isAdded ? 'btn-secondary' : 'btn-outline-primary'} mt-3"
-                                onclick="toggleCompare('${product.id}')"
-                                id="btn-compare-${product.id}">
-                                ${isAdded ? 'Đã thêm (Xóa)' : 'Thêm vào So sánh'}
+            <div class="col">
+                <div class="card h-100 product-card shadow-sm">
+                    <img src="${product.image}" class="card-img-top" alt="${product.name}">
+
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title product-name">${product.name}</h5>
+                        <p class="card-text text-muted product-specs">${product.cpu}, ${product.ram}</p>
+
+                        <p class="card-text fw-bold fs-5 mt-auto">${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.price)}</p>
+
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-success" onclick="addToCart(this, '${product.id}')">
+                                <i class="bi bi-cart-plus"></i> Thêm vào giỏ
                             </button>
+                            <div class="btn-group">
+                                <button class="btn btn-outline-primary w-100 ${isCompareSelected ? 'active' : ''}" onclick="toggleCompare(this, '${product.id}')">
+                                    <i class="bi bi-bar-chart-steps"></i> 
+                                    <span class="compare-text">${isCompareSelected ? ' Đã chọn' : ' So sánh'}</span>
+                                </button>
+                                <button class="btn ${isFavoriteSelected ? 'btn-danger' : 'btn-outline-danger'}" onclick="toggleFavorite(this, '${product.id}')" title="Thêm vào yêu thích">
+                                    <i class="bi ${isFavoriteSelected ? 'bi-heart-fill' : 'bi-heart'}"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
+            </div>
             `;
-            container.insertAdjacentHTML('beforeend', productCardHTML);
+            container.innerHTML += productCardHTML;
         });
+
+        updateSidebar();
 
     } catch (error) {
         console.error('Error loading products for shop page:', error);
@@ -113,39 +170,79 @@ async function loadAllProducts() {
  * This function is called via onclick() from the HTML.
  * @param {string} productId - The ID of the product.
  */
-function toggleCompare(productId) {
-    let compareList = getCompareList();
-    const button = document.getElementById(`btn-compare-${productId}`);
-    const productCard = document.getElementById(`card-${productId}`); // Get the card element
+// [CẬP NHẬT] - Hàm toggleCompare (Sửa lỗi)
+function toggleCompare(element, productId) { // Thêm 'element'
+    const compareList = getCompareList();
+    const maxLimit = 3;
+    const productIndex = compareList.indexOf(productId);
 
-    if (compareList.includes(productId)) {
-        // --- Remove from list ---
-        compareList = compareList.filter(id => id !== productId);
-        if (button) {
-            button.textContent = 'Thêm vào So sánh';
-            button.classList.remove('btn-secondary');
-            button.classList.add('btn-outline-primary');
-        }
-        if (productCard) {
-            productCard.classList.remove('selected'); // Remove selected class
-        }
+    const compareButtonText = element.querySelector('.compare-text'); // Lấy text bên trong
+
+    if (productIndex > -1) {
+        // Product is already in the list, REMOVE it
+        compareList.splice(productIndex, 1);
+        // Cập nhật nút (UI)
+        element.classList.remove('active'); // Bỏ trạng thái active
+        compareButtonText.textContent = ' So sánh'; // Đổi text
     } else {
-        // --- Add to list ---
-        if (compareList.length >= 3) {
-            alert('Bạn chỉ có thể chọn tối đa 3 laptop để so sánh. Vui lòng xóa một sản phẩm trước khi thêm sản phẩm mới.');
-            return; // Prevent adding more than 3
+        // Product is NOT in the list, ADD it
+        if (compareList.length >= maxLimit) {
+            alert(`Bạn chỉ có thể so sánh tối đa ${maxLimit} sản phẩm.`);
+            return; // Không làm gì cả
         }
         compareList.push(productId);
-        if (button) {
-            button.textContent = 'Đã thêm (Xóa)';
-            button.classList.remove('btn-outline-primary');
-            button.classList.add('btn-secondary');
-        }
-        if (productCard) {
-            productCard.classList.add('selected'); // Add selected class (uses style.css)
-        }
+        // Cập nhật nút (UI)
+        element.classList.add('active'); // Thêm trạng thái active
+        compareButtonText.textContent = ' Đã chọn'; // Đổi text
     }
 
-    // Save to localStorage
-    saveCompareList(compareList);
+    localStorage.setItem('compareList', JSON.stringify(compareList));
+
+    // BỎ LỆNH loadAllProducts()
+    // loadAllProducts(); 
+
+    // THAY BẰNG:
+    updateSidebar(); // Chỉ cập nhật sidebar
+}
+
+// [THÊM VÀO] - Hàm cho nút Yêu thích (có toggle)
+function toggleFavorite(element, productId) {
+    const favoriteList = getFavoriteList();
+    const productIndex = favoriteList.indexOf(productId);
+
+    if (productIndex > -1) {
+        // Đã có -> Xóa đi
+        favoriteList.splice(productIndex, 1);
+        // Cập nhật nút (UI)
+        element.classList.remove('btn-danger'); // Bỏ nền đỏ
+        element.classList.add('btn-outline-danger'); // Thêm viền đỏ
+        element.querySelector('i').classList.remove('bi-heart-fill'); // Bỏ icon tô đầy
+        element.querySelector('i').classList.add('bi-heart'); // Thêm icon viền
+    } else {
+        // Chưa có -> Thêm vào
+        favoriteList.push(productId);
+        // Cập nhật nút (UI)
+        element.classList.add('btn-danger'); // Thêm nền đỏ
+        element.classList.remove('btn-outline-danger'); // Bỏ viền đỏ
+        element.querySelector('i').classList.add('bi-heart-fill'); // Thêm icon tô đầy
+        element.querySelector('i').classList.remove('bi-heart'); // Bỏ icon viền
+    }
+
+    localStorage.setItem('favoriteList', JSON.stringify(favoriteList));
+    updateSidebar(); // Cập nhật sidebar
+}
+
+// [THÊM VÀO] - Hàm cho nút Giỏ hàng (chỉ thêm)
+function addToCart(element, productId) {
+    const cartList = getCartList();
+
+    // (Logic đơn giản: chỉ thêm, không kiểm tra trùng lặp)
+    cartList.push(productId);
+    localStorage.setItem('cartList', JSON.stringify(cartList));
+
+    // Cập nhật nút (UI)
+    element.textContent = 'Đã thêm vào giỏ';
+    element.classList.add('disabled'); // Vô hiệu hóa nút
+
+    updateSidebar(); // Cập nhật sidebar
 }

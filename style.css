@@ -31,6 +31,16 @@ h2, h3 {
     border: 1px solid #d0e4f7;
 }
 
+/* Side bar */
+.sidebar-sticky {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 80px; /* Điều chỉnh dựa trên chiều cao của navbar */
+    height: calc(100vh - 80px);
+    overflow-y: auto;
+    padding-top: 1rem;
+}
+
 /* Product Cards */
 .product-card {
     border: 1px solid #dee2e6;
@@ -62,16 +72,26 @@ h2, h3 {
 }
 
 .product-card .card-title {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     font-weight: 600;
     color: #004aad;
 }
 
 .product-card .card-text {
-    font-size: 1.1rem;
+    font-size: 0.9rem;
     font-weight: 500;
     color: #333;
 }
+
+.product-name {
+    height: 3em; /* Giới hạn 2 dòng */
+    overflow: hidden;
+}
+.product-specs {
+    height: 5em; /* Giới hạn 2-3 dòng */
+    overflow: hidden;
+}
+
 
 /* Priority Sliders */
 .form-range {

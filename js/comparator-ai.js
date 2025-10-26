@@ -1,4 +1,3 @@
-// js/comparator-ai.js
 
 // Keep the existing global allProducts array if you have it from the previous version.
 // If not, declare it here:
@@ -28,6 +27,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 handleProductCardSelection(event.target);
             }
         });
+    }
+    // Lắng nghe sự kiện thay đổi của thanh trượt
+    const perfSlider = document.getElementById('priority-performance');
+    const mobSlider = document.getElementById('priority-mobility');
+    const priceSlider = document.getElementById('priority-price');
+
+    if(perfSlider) {
+        perfSlider.addEventListener('input', (e) => updateSliderStatus(e.target.value, 'performance-status'));
+    }
+    if(mobSlider) {
+        mobSlider.addEventListener('input', (e) => updateSliderStatus(e.target.value, 'mobility-status'));
+    }
+    if(priceSlider) {
+        priceSlider.addEventListener('input', (e) => updateSliderStatus(e.target.value, 'price-status'));
     }
 });
 
@@ -81,7 +94,7 @@ async function loadProducts() {
 
     try {
         // Load the JSON file (containing information for ALL products)
-        const response = await fetch('./data/products.json');
+        const response = await fetch('./data/products_100.json');
         if (!response.ok) {
             throw new Error(`Failed to load products.json: ${response.statusText}`);
         }
@@ -94,28 +107,35 @@ async function loadProducts() {
         container.innerHTML = ''; // Clear existing content
 
         // Render the selected products into the UI
+        // ... (bên trong hàm loadProducts)
         productsToCompare.forEach(product => {
-            const productCardHTML = `
-                <div class="col-md-4 mb-4">
-                    <div class="card product-card selected h-100" data-product-id="${product.id}" id="card-${product.id}">
-                        <img src="${product.image}" class="card-img-top" alt="${product.name}">
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title">${product.name}</h5>
-                            <p class="card-text text-muted">${product.specs.cpu}, ${product.specs.ram}</p>
-                            <p class="card-text fw-bold mt-auto">${product.price}</p>
-                            <div class="form-check mt-2">
-                                <input class="form-check-input product-checkbox" type="checkbox"
-                                       value="${product.id}" id="check-${product.id}" checked>
-                                <label class="form-check-label" for="check-${product.id}">
-                                    So sánh sản phẩm này
-                                </label>
+                const productCardHTML = `
+                    <div class="col-md-3 mb-4"> <div class="card product-card selected h-100" data-product-id="${product.id}" id="card-${product.id}">
+                            <img src="${product.image}" class="card-img-top" alt="${product.name}">
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title">${product.name}</h5>
+                                
+                                <ul class="list-unstyled text-muted small mt-2">
+                                    <li title="CPU"><i class="bi bi-cpu-fill"></i> ${product.cpu}</li>
+                                    <li title="RAM"><i class="bi bi-memory"></i> ${product.ram}</li>
+                                    <li title="Storage"><i class="bi bi-device-hdd"></i> ${product.storage}</li>
+                                    <li title="Battery"><i class="bi bi-battery-charging"></i> ${product.battery}</li>
+                                </ul>
+                                <p class="card-text fw-bold fs-5 mt-auto">${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.price)}</p>
+                                
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input product-checkbox" type="checkbox"
+                                        value="${product.id}" id="check-${product.id}" checked>
+                                    <label class="form-check-label" for="check-${product.id}">
+                                        So sánh sản phẩm này
+                                    </label>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            `;
-            container.insertAdjacentHTML('beforeend', productCardHTML);
-        });
+                `;
+                container.insertAdjacentHTML('beforeend', productCardHTML);
+            });
 
     } catch (error) {
         console.error('Error loading products for comparison page:', error);
@@ -138,6 +158,8 @@ async function handleCompareClick() {
         mobility: document.getElementById('priority-mobility')?.value || 50,
         price: document.getElementById('priority-price')?.value || 50
     };
+    // [THÊM VÀO] - Lấy giá trị từ prompt
+    const userPromptText = document.getElementById('user-prompt').value;
 
     // 2. Validate data
     if (selectedLaptopIDs.length < 2 || selectedLaptopIDs.length > 3) {
@@ -149,42 +171,20 @@ async function handleCompareClick() {
     toggleLoading(true);
     document.getElementById('results-container').style.display = 'none';
 
-    // 4. Send data to Noco AI Workflow (API Call)
-    // Replace 'YOUR_NOCO_AI_WEBHOOK_URL_HERE' with your actual Noco AI webhook URL.
-    const NOCO_AI_WEBHOOK_URL = 'YOUR_NOCO_AI_WEBHOOK_URL_HERE';
 
     try {
         let data;
-        if (NOCO_AI_WEBHOOK_URL === 'YOUR_NOCO_AI_WEBHOOK_URL_HERE' || NOCO_AI_WEBHOOK_URL.trim() === '') {
-            // --- MOCK SECTION FOR DEMO (60-80% functionality) ---
-            // Use mock function instead of real API call for testing
-            console.warn("Using mock API response. Please update NOCO_AI_WEBHOOK_URL for real integration.");
-            data = await getMockResponse(selectedLaptopIDs, priorities);
-            // ----------------------------------------------------
-        } else {
-            // --- REAL INTEGRATION SECTION ---
-            const response = await fetch(NOCO_AI_WEBHOOK_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    laptopIDs: selectedLaptopIDs,
-                    priorities: priorities
-                })
-            });
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ message: 'Unknown API error' }));
-                throw new Error(`API call failed: ${response.status} - ${errorData.message || response.statusText}`);
-            }
-            data = await response.json();
-            // ----------------------------------------------------
-        }
 
+        // --- BUỘC SỬ DỤNG GIẢ LẬP VÌ BACKEND SẬP ---
+        console.warn("Backend đang tạm dừng. Chuyển sang chế độ Giả lập (Mock Mode).");
+        data = await getMockResponse(selectedLaptopIDs, priorities, userPromptText);;
+        // ---------------------------------------------
 
         // 5. Display results
         displayResults(data, selectedLaptopIDs);
 
     } catch (error) {
-        console.error('Error calling comparison API:', error);
+        console.error('Lỗi trong quá trình giả lập AI:', error);
         alert(`Đã xảy ra lỗi trong quá trình phân tích: ${error.message}. Vui lòng thử lại.`);
     } finally {
         // 6. Hide loading
@@ -271,79 +271,102 @@ function displayResults(data, selectedLaptopIDs) {
  * @param {Object} priorities - User-defined priorities.
  * @returns {Promise<Object>} A promise that resolves with mock comparison data.
  */
-async function getMockResponse(selectedLaptopIDs, priorities) {
-    console.log("Calling Mock function with IDs:", selectedLaptopIDs, "and Priorities:", priorities);
+// [HÀM MỚI] - getMockResponse (Đã nâng cấp)
+async function getMockResponse(selectedLaptopIDs, priorities, userPrompt) {
 
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Mô phỏng độ trễ của API
+    await new Promise(resolve => setTimeout(resolve, 1500)); 
 
-    // Sample data (returns the first 2 selected products)
-    const id1 = selectedLaptopIDs[0] || 'laptop_a';
-    const id2 = selectedLaptopIDs[1] || 'laptop_b';
-    const id3 = selectedLaptopIDs[2] || 'laptop_c'; // For 3 selected laptops
+    const id1 = selectedLaptopIDs[0];
+    const id2 = selectedLaptopIDs[1];
+    const id3 = selectedLaptopIDs.length > 2 ? selectedLaptopIDs[2] : null;
 
-    // Find the actual product data from the loaded allProducts array
-    const laptopData1 = allProducts.find(p => p.id === id1) || { name: `Laptop ${id1}`, price: '25.000.000 VNĐ', specs: { cpu: 'i7', ram: '16GB', storage: '512GB', gpu: 'RTX 3060', battery: '70Wh', weight: '2.0 kg' }};
-    const laptopData2 = allProducts.find(p => p.id === id2) || { name: `Laptop ${id2}`, price: '18.000.000 VNĐ', specs: { cpu: 'i5', ram: '8GB', storage: '256GB', gpu: 'Iris Xe', battery: '50Wh', weight: '1.4 kg' }};
-    const laptopData3 = allProducts.find(p => p.id === id3) || { name: `Laptop ${id3}`, price: '35.000.000 VNĐ', specs: { cpu: 'i9', ram: '32GB', storage: '1TB', gpu: 'RTX 4070', battery: '90Wh', weight: '2.5 kg' }};
-
-
-    let aiSummary = `Đây là tóm tắt từ Chuyên gia AI của bạn. Dựa trên ưu tiên của bạn (Hiệu năng: ${priorities.performance}%, Di động: ${priorities.mobility}%, Giá: ${priorities.price}%):\n\n`;
-
-    if (priorities.performance > priorities.mobility && priorities.performance > priorities.price) {
-        aiSummary += `Với ưu tiên hàng đầu là hiệu năng mạnh mẽ, <strong>${laptopData1.name}</strong> nổi bật với ${laptopData1.specs.cpu} và ${laptopData1.specs.gpu}. Đây sẽ là lựa chọn tuyệt vời cho các tác vụ nặng.`;
-        if (selectedLaptopIDs.length > 1) {
-            aiSummary += ` Trong khi đó, <strong>${laptopData2.name}</strong> mang lại sự cân bằng tốt hơn về giá cả và tính di động, phù hợp cho người dùng cần linh hoạt hơn.`;
-        }
-    } else if (priorities.mobility > priorities.performance && priorities.mobility > priorities.price) {
-        aiSummary += `Nếu tính di động là yếu tố quan trọng nhất, <strong>${laptopData2.name}</strong> với trọng lượng chỉ ${laptopData2.specs.weight} và pin ${laptopData2.specs.battery} là lựa chọn lý tưởng. Nó sẽ rất tiện lợi cho công việc khi di chuyển.`;
-        if (selectedLaptopIDs.length > 1) {
-            aiSummary += ` Mặc dù <strong>${laptopData1.name}</strong> có hiệu năng cao hơn, nhưng trọng lượng ${laptopData1.specs.weight} có thể là một hạn chế về di động.`;
-        }
-    } else if (priorities.price >= priorities.performance && priorities.price >= priorities.mobility) { // Price is highest or balanced
-        aiSummary += `Để tối ưu chi phí mà vẫn đảm bảo hiệu suất tốt, <strong>${laptopData2.name}</strong> với mức giá ${laptopData2.price} mang lại giá trị rất cạnh tranh.`;
-        if (selectedLaptopIDs.length > 1) {
-            aiSummary += ` Nếu ngân sách cho phép, <strong>${laptopData1.name}</strong> sẽ cung cấp trải nghiệm cao cấp hơn với mức giá ${laptopData1.price}.`;
-        }
-    } else {
-        aiSummary += `Sau khi phân tích, các lựa chọn của bạn đều có những ưu và nhược điểm riêng. Hãy xem xét kỹ hơn bảng so sánh chi tiết dưới đây để đưa ra quyết định phù hợp nhất với nhu cầu cụ thể của bạn.`;
+    // Lấy dữ liệu sản phẩm thật từ biến 'allProducts' toàn cục
+    const laptopData1 = allProducts.find(p => p.id === id1) || { name: 'Laptop 1 (Lỗi)', price: 0, cpu: 'N/A', ram: 'N/A', storage: 'N/A', gpu: 'N/A', battery: 'N/A', weight: 'N/A', screen: 'N/A' };
+    const laptopData2 = allProducts.find(p => p.id === id2) || { name: 'Laptop 2 (Lỗi)', price: 0, cpu: 'N/A', ram: 'N/A', storage: 'N/A', gpu: 'N/A', battery: 'N/A', weight: 'N/A', screen: 'N/A' };
+    let laptopData3 = null;
+    if(id3) {
+        laptopData3 = allProducts.find(p => p.id === id3) || { name: 'Laptop 3 (Lỗi)', price: 0, cpu: 'N/A', ram: 'N/A', storage: 'N/A', gpu: 'N/A', battery: 'N/A', weight: 'N/A', screen: 'N/A' };
     }
-    aiSummary += "\n\nHãy xem bảng so sánh chi tiết dưới đây để có cái nhìn toàn diện hơn và đưa ra quyết định cuối cùng.";
 
+    let aiSummary = "";
+
+    // ----- Logic AI Giả lập -----
+    if (userPrompt && userPrompt.trim() !== "") {
+        // Trường hợp 1: Người dùng nhập prompt
+        aiSummary = `Phân tích dựa trên nhu cầu của bạn: "${userPrompt}". 
+                    <br><br> Dựa trên mô tả, <strong>${laptopData1.name}</strong> dường như là lựa chọn phù hợp nhất. 
+                    Nó cân bằng tốt giữa ${laptopData1.cpu} và ${laptopData1.gpu} để xử lý các tác vụ bạn mô tả. 
+                    Tuy nhiên, hãy cân nhắc <strong>${laptopData2.name}</strong> nếu bạn cần mức giá tốt hơn.`;
+    } else {
+        // Trường hợp 2: Người dùng dùng thanh trượt
+        const maxPriority = Math.max(priorities.performance, priorities.mobility, priorities.price);
+
+        if (maxPriority === priorities.performance) {
+            aiSummary = `Bạn ưu tiên <strong>Hiệu năng</strong>. 
+                        <br><br><strong>${laptopData1.name}</strong> là lựa chọn vượt trội với ${laptopData1.cpu} và ${laptopData1.gpu}. 
+                        Nó sẽ xử lý các tác vụ nặng tốt nhất trong nhóm này.`;
+        } else if (maxPriority === priorities.mobility) {
+            aiSummary = `Bạn ưu tiên <strong>Tính di động</strong>. 
+                        <br><br>Với trọng lượng chỉ ${laptopData2.weight} và pin ${laptopData2.battery}, 
+                        <strong>${laptopData2.name}</strong> là người bạn đồng hành lý tưởng để di chuyển thường xuyên.`;
+        } else {
+            aiSummary = `Bạn ưu tiên <strong>Giá cả</strong>. 
+                        <br><br>Với mức giá ${new Intl.NumberFormat('vi-VN').format(laptopData2.price)}, 
+                        <strong>${laptopData2.name}</strong> cung cấp giá trị tốt nhất so với hiệu năng mà nó mang lại.`;
+        }
+    }
+    // ----- Hết Logic AI Giả lập -----
+
+    // Tạo bảng so sánh
+    const formatPrice = (price) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
 
     const mockComparisonDetails = [
-        { "feature": "CPU", [id1]: laptopData1.specs.cpu, [id2]: laptopData2.specs.cpu },
-        { "feature": "RAM", [id1]: laptopData1.specs.ram, [id2]: laptopData2.specs.ram },
-        { "feature": "GPU", [id1]: laptopData1.specs.gpu, [id2]: laptopData2.specs.gpu },
-        { "feature": "Lưu trữ", [id1]: laptopData1.specs.storage, [id2]: laptopData2.specs.storage },
-        { "feature": "Giá", [id1]: laptopData1.price, [id2]: laptopData2.price },
-        { "feature": "Cân nặng", [id1]: laptopData1.specs.weight, [id2]: laptopData2.specs.weight },
-        { "feature": "Pin", [id1]: laptopData1.specs.battery, [id2]: laptopData2.specs.battery },
-        { "feature": "Màn hình", [id1]: laptopData1.specs.screen, [id2]: laptopData2.specs.screen }
+        { "feature": "CPU", [id1]: laptopData1.cpu, [id2]: laptopData2.cpu },
+        { "feature": "RAM", [id1]: laptopData1.ram, [id2]: laptopData2.ram },
+        { "feature": "GPU", [id1]: laptopData1.gpu, [id2]: laptopData2.gpu },
+        { "feature": "Lưu trữ", [id1]: laptopData1.storage, [id2]: laptopData2.storage },
+        { "feature": "Giá", [id1]: formatPrice(laptopData1.price), [id2]: formatPrice(laptopData2.price) },
+        { "feature": "Cân nặng", [id1]: laptopData1.weight, [id2]: laptopData2.weight },
+        { "feature": "Pin", [id1]: laptopData1.battery, [id2]: laptopData2.battery },
+        { "feature": "Màn hình", [id1]: laptopData1.screen, [id2]: laptopData2.screen }
     ];
 
-    // Add data for the third laptop if selected
-    if (selectedLaptopIDs.length === 3) {
+    // Thêm laptop 3 nếu có
+    if (laptopData3) {
         mockComparisonDetails.forEach(item => {
-            if (item.feature === "CPU") item[id3] = laptopData3.specs.cpu;
-            if (item.feature === "RAM") item[id3] = laptopData3.specs.ram;
-            if (item.feature === "GPU") item[id3] = laptopData3.specs.gpu;
-            if (item.feature === "Lưu trữ") item[id3] = laptopData3.specs.storage;
-            if (item.feature === "Giá") item[id3] = laptopData3.price;
-            if (item.feature === "Cân nặng") item[id3] = laptopData3.specs.weight;
-            if (item.feature === "Pin") item[id3] = laptopData3.specs.battery;
-            if (item.feature === "Màn hình") item[id3] = laptopData3.specs.screen;
+            if (item.feature === "CPU") item[id3] = laptopData3.cpu;
+            if (item.feature === "RAM") item[id3] = laptopData3.ram;
+            if (item.feature === "GPU") item[id3] = laptopData3.gpu;
+            if (item.feature === "Lưu trữ") item[id3] = laptopData3.storage;
+            if (item.feature === "Giá") item[id3] = formatPrice(laptopData3.price);
+            if (item.feature === "Cân nặng") item[id3] = laptopData3.weight;
+            if (item.feature === "Pin") item[id3] = laptopData3.battery;
+            if (item.feature === "Màn hình") item[id3] = laptopData3.screen;
         });
     }
 
-
     return {
         summary: aiSummary,
-        laptop_names: {
-            [id1]: laptopData1.name,
-            [id2]: laptopData2.name,
-            ...(selectedLaptopIDs.length === 3 && { [id3]: laptopData3.name }) // Conditionally add laptop 3
-        },
+        laptop_names: [laptopData1.name, laptopData2.name, laptopData3?.name].filter(Boolean), // Lọc ra null nếu không có lap 3
         comparison_details: mockComparisonDetails
     };
+}
+
+// [HÀM MỚI] - Cập nhật trạng thái thanh trượt
+function updateSliderStatus(sliderValue, outputId) {
+    const outputEl = document.getElementById(outputId);
+    if (!outputEl) return;
+
+    if (sliderValue <= 20) {
+        outputEl.textContent = 'Rất thấp';
+    } else if (sliderValue <= 40) {
+        outputEl.textContent = 'Thấp';
+    } else if (sliderValue <= 60) {
+        outputEl.textContent = 'Trung bình';
+    } else if (sliderValue <= 80) {
+        outputEl.textContent = 'Cao';
+    } else {
+        outputEl.textContent = 'Rất cao';
+    }
 }
