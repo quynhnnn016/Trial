@@ -37,21 +37,23 @@
                     </li>
                 </ul>
 
-                <ul class="navbar-nav ms-auto flex-row">
-                    <li class="nav-item">
-                        <a class="nav-link px-2" href="#" title="Giỏ hàng">
-                            <i class="bi bi-cart fs-5"></i>
-                        </a>
+                <form class="d-flex mx-auto" role="search">
+                    <input class="form-control me-2" type="search" placeholder="Tìm kiếm laptop..." aria-label="Search">
+                    <button class="btn btn-outline-light" type="submit">Tìm</button>
+                </form>
+
+                <ul class="navbar-nav ms-auto flex-row" data-bs-toggle="offcanvas" data-bs-target="#userSidebar" style="cursor: pointer;">
+                    <li class="nav-item position-relative" title="Giỏ hàng">
+                        <span class="nav-link px-2"><i class="bi bi-cart fs-5"></i></span>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success" id="cart-count-badge">0</span>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link px-2" href="comparator.html" title="So sánh sản phẩm">
-                            <i class="bi bi-bar-chart-steps fs-5"></i>
-                        </a>
+                    <li class="nav-item position-relative" title="Sản phẩm Yêu thích">
+                        <span class="nav-link px-2"><i class="bi bi-heart fs-5"></i></span>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="fav-count-badge">0</span>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link px-2" href="#" title="Tài khoản">
-                            <i class="bi bi-person-circle fs-5"></i>
-                        </a>
+                    <li class="nav-item position-relative" title="So sánh sản phẩm">
+                        <span class="nav-link px-2"><i class="bi bi-bar-chart-steps fs-5"></i></span>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary" id="compare-count-badge">0</span>
                     </li>
                 </ul>
             </div>
@@ -60,14 +62,13 @@
 
     <!-- Main Container -->
     <main class="container mt-4">
-
         <!-- Hero Section -->
         <section class="hero-section">
-            <div class="p-5 mb-4 bg-light rounded-3 text-center shadow-sm">
-                <div class="container-fluid py-5">
-                    <h1 class="display-5 fw-bold text-primary">Tìm kiếm Laptop Hoàn Hảo Của Bạn</h1>
-                    <p class="col-md-8 fs-4 mx-auto text-muted">Duyệt qua danh sách các mẫu laptop mới nhất, chọn những sản phẩm bạn muốn so sánh và để AI giúp bạn đưa ra quyết định thông minh.</p>
-                    <a href="#product-list-container" class="btn btn-primary btn-lg mt-3">Khám phá ngay</a>
+            <div class="bg-light p-5 mb-4 rounded-3">
+                <div class="container-fluid py-5 text-center">
+                    <h1 class="display-5 fw-bold">Tìm kiếm Laptop Hoàn Hảo</h1>
+                    <p class="fs-4">Duyệt qua 100+ mẫu laptop mới nhất. Chọn sản phẩm bạn quan tâm và để AI của chúng tôi phân tích, giúp bạn đưa ra quyết định thông minh nhất.</p>
+                    <a href="#product-section" class="btn btn-primary btn-lg mt-3">Bắt đầu Khám phá</a>
                 </div>
             </div>
         </section>
@@ -75,52 +76,60 @@
         <!-- Section 2: Product List -->
         <div class="container-fluid px-4">
             <div class="row">
-                <main class="col-md-9">
+                <main>
                     <section class="container my-4" id="product-section">
                         <h2 class="mb-3">Danh sách sản phẩm</h2>
                         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4" id="product-list-container"></div>
                     </section>
                 </main>
-
-                <aside class="col-md-3">
-                    <div class="sidebar-sticky shadow-sm">
-                        <div class="card mb-3">
-                            <div class="card-header bg-primary text-white">
-                                <i class="bi bi-bar-chart-steps"></i> Đang chọn So sánh
-                            </div>
-                            <ul class="list-group list-group-flush" id="compare-sidebar-list">
-                                <li class="list-group-item text-muted">Chưa chọn sản phẩm nào...</li>
-                            </ul>
-                        </div>
-
-                        <div class="card mb-3">
-                            <div class="card-header bg-danger text-white">
-                                <i class="bi bi-heart-fill"></i> Sản phẩm Yêu thích
-                            </div>
-                            <ul class="list-group list-group-flush" id="favorite-sidebar-list">
-                                <li class="list-group-item text-muted">Chưa thích sản phẩm nào...</li>
-                            </ul>
-                        </div>
-
-                        <div class="card mb-3">
-                            <div class="card-header bg-success text-white">
-                                <i class="bi bi-cart-fill"></i> Giỏ hàng
-                            </div>
-                            <ul class="list-group list-group-flush" id="cart-sidebar-list">
-                                <li class="list-group-item text-muted">Giỏ hàng trống...</li>
-                            </ul>
-                        </div>
-                    </div>
-                </aside>
             </div>
         </div>
-
     </main>
+
+
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="userSidebar" aria-labelledby="userSidebarLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="userSidebarLabel">Lựa chọn của bạn</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <div class="card mb-3">
+                <div class="card-header bg-primary text-white">
+                    <i class="bi bi-bar-chart-steps"></i> Đang chọn So sánh
+                </div>
+                <ul class="list-group list-group-flush" id="compare-sidebar-list">
+                    </ul>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header bg-danger text-white">
+                    <i class="bi bi-heart-fill"></i> Sản phẩm Yêu thích
+                </div>
+                <ul class="list-group list-group-flush" id="favorite-sidebar-list">
+                    </ul>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header bg-success text-white">
+                    <i class="bi bi-cart-fill"></i> Giỏ hàng
+                </div>
+                <ul class="list-group list-group-flush" id="cart-sidebar-list">
+                    </ul>
+            </div>
+        </div>
+    </div>
 
     <!-- Footer (exact same as comparator.html) -->
     <footer class="bg-light text-center text-lg-start mt-5 py-3">
         <div class="container text-muted">
             <p>&copy; 2024 AI Laptop Comparator. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <footer class="bg-dark text-white text-center p-4 mt-5">
+        <div class="container">
+            <p class="mb-0">&copy; 2025 AI Laptop Advisor. Mọi quyền được bảo lưu.</p>
+            <p class="mb-0">Đồ án Phát triển Web Kinh doanh - Đại học ABC</p>
         </div>
     </footer>
 

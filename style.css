@@ -31,15 +31,7 @@ h2, h3 {
     border: 1px solid #d0e4f7;
 }
 
-/* Side bar */
-.sidebar-sticky {
-    position: -webkit-sticky;
-    position: sticky;
-    top: 80px; /* Điều chỉnh dựa trên chiều cao của navbar */
-    height: calc(100vh - 80px);
-    overflow-y: auto;
-    padding-top: 1rem;
-}
+
 
 /* Product Cards */
 .product-card {
@@ -51,12 +43,14 @@ h2, h3 {
 }
 
 .product-card:hover {
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-    transform: translateY(-3px);
+    transform: translateY(-5px); /* Nhẹ nhàng nhấc thẻ lên */
+    box-shadow: 0 0.5rem 1.5rem rgba(13, 57, 116, 0.2); /* Đổ bóng xanh */
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    border: 1px solid #0258c9;
 }
 
 .product-card.selected {
-    border: 3px solid #004aad; /* Dark blue border when selected */
+    border: 1px solid #004aad; /* Dark blue border when selected */
     box-shadow: 0 0.5rem 1rem rgba(0, 74, 173, 0.25);
 }
 
