@@ -267,10 +267,10 @@ h2, h3 {
 
 /* Footer Styling */
 footer {
-    background-color: #f1f1f1;
-    border-top: 1px solid #e7e7e7;
-    font-size: 0.9rem;
-    color: #6c757d;
+    background-color: #0C2B4E;
+    border-top: 10px solid #e7e7e7;
+    font-size: 1.2rem;
+    color: #fff;
 }
 
 /* Responsive adjustments */

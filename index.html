@@ -27,48 +27,105 @@
             <div class="collapse navbar-collapse" id="mainNav">
                 <ul class="menu">
                     <li class="dropdown">
-                        <button class="dropbtn">Thương hiệu ▾</button>
+                        <button class="dropbtn">
+                            <i class="bi bi-tags-fill me-2"></i> Thương hiệu ▾
+                        </button>
                         <ul class="dropdown-content">
-                            <li><a href="weather.html">Lenovo</a></li>
-                            <li><a href="rss.html">MAC</a></li>
-                            <li><a href="rss.html">Asus</a></li>
-                            <li><a href="rss.html">Acer</a></li>
-                            <li><a href="rss.html">HP</a></li>
-                            <li><a href="rss.html">Dell</a></li>
-                            <li><a href="rss.html">LG</a></li>
+                            <li>
+                                <a href="weather.html">
+                                    <i class="bi bi-laptop me-2"></i>Lenovo
+                                </a>
+                            </li>
+                            <li>
+                                <a href="rss.html">
+                                    <i class="bi bi-apple me-2"></i>MAC </a>
+                            </li>
+                            <li>
+                                <a href="rss.html">
+                                    <i class="bi bi-laptop me-2"></i>Asus
+                                </a>
+                            </li>
+                            <li>
+                                <a href="rss.html">
+                                    <i class="bi bi-laptop me-2"></i>Acer
+                                </a>
+                            </li>
+                            <li>
+                                <a href="rss.html">
+                                    <i class="bi bi-laptop me-2"></i>HP
+                                </a>
+                            </li>
+                            <li>
+                                <a href="rss.html">
+                                    <i class="bi bi-laptop me-2"></i>Dell
+                                </a>
+                            </li>
+                            <li>
+                                <a href="rss.html">
+                                    <i class="bi bi-laptop me-2"></i>LG
+                                </a>
+                            </li>
                         </ul>
                     </li>
 
                     <li class="dropdown">
-                        <button class="dropbtn">Khu vực giao hàng ▾</button>
+                        <button class="dropbtn"><i class="bi bi-truck me-2"></i>Khu vực giao hàng ▾</button>
                         <ul class="dropdown-content">
-                            <li><a href="products.html" target="mainFrame">TP. HCM</a></li>
-                            <li><a href="providers.html" target="mainFrame">Hà Nội</a></li>
-                            <li><a href="providers.html" target="mainFrame">Đà Nẵng</a></li>
-                            <li><a href="providers.html" target="mainFrame">Huế</a></li>
-                            <li><a href="providers.html" target="mainFrame">Hải Phòng</a></li>
-                            <li><a href="providers.html" target="mainFrame">Cà Mau</a></li>
+                            <li>
+                                <a href="products.html" target="mainFrame">
+                                    <i class="bi bi-geo-alt-fill me-2"></i>TP. HCM
+                                </a>
+                            </li>
+                            <li>
+                                <a href="providers.html" target="mainFrame">
+                                    <i class="bi bi-geo-alt-fill me-2"></i>Hà Nội
+                                </a>
+                            </li>
+                            <li>
+                                <a href="providers.html" target="mainFrame">
+                                    <i class="bi bi-geo-alt-fill me-2"></i>Đà Nẵng
+                                </a>
+                            </li>
+                            <li>
+                                <a href="providers.html" target="mainFrame">
+                                    <i class="bi bi-geo-alt-fill me-2"></i>Huế
+                                </a>
+                            </li>
+                            <li>
+                                <a href="providers.html" target="mainFrame">
+                                    <i class="bi bi-geo-alt-fill me-2"></i>Hải Phòng
+                                </a>
+                            </li>
+                            <li>
+                                <a href="providers.html" target="mainFrame">
+                                    <i class="bi bi-geo-alt-fill me-2"></i>Cà Mau
+                                </a>
+                            </li>
                         </ul>
                     </li>
                 </ul>
 
-                <form class="d-flex mx-auto" role="search">
-                    <input class="form-control me-2" type="search" placeholder="Tìm kiếm laptop..." aria-label="Search">
+                <form class="d-flex mx-auto w-25" role="search" id="search-form">
+                    <input class="form-control me-2" type="search" placeholder="Tìm kiếm laptop..." aria-label="Search" id="search-input" list="search-suggestions">
+                        <datalist id="search-suggestions"></datalist>
                     <button class="btn btn-outline-light" type="submit">Tìm</button>
                 </form>
 
-                <ul class="navbar-nav ms-auto flex-row" data-bs-toggle="offcanvas" data-bs-target="#userSidebar" style="cursor: pointer;">
-                    <li class="nav-item position-relative" title="Giỏ hàng">
+                <ul class="navbar-nav ms-auto flex-row">
+                    <li class="nav-item position-relative" title="Giỏ hàng" data-bs-toggle="offcanvas" data-bs-target="#userSidebar" style="cursor: pointer;">
                         <span class="nav-link px-2"><i class="bi bi-cart fs-5"></i> Giỏ hàng </span>
                         <span class="position-absolute top-0 start-0 translate-middle badge rounded-pill bg-success" id="cart-count-badge">0</span>
                     </li>
-                    <li class="nav-item position-relative" title="Sản phẩm Yêu thích">
+                    <li class="nav-item position-relative" title="Sản phẩm Yêu thích" data-bs-toggle="offcanvas" data-bs-target="#userSidebar" style="cursor: pointer;">
                         <span class="nav-link px-2"><i class="bi bi-heart fs-5"></i> Yêu thích </span>
                         <span class="position-absolute top-0 start-0 translate-middle badge rounded-pill bg-danger" id="fav-count-badge">0</span>
                     </li>
-                    <li class="nav-item position-relative" title="So sánh sản phẩm">
+                    <li class="nav-item position-relative" title="So sánh sản phẩm" data-bs-toggle="offcanvas" data-bs-target="#userSidebar" style="cursor: pointer;">
                         <span class="nav-link px-2"><i class="bi bi-bar-chart-steps fs-5"></i>  So sánh </span>
                         <span class="position-absolute top-0 start-0 translate-middle badge rounded-pill bg-primary" id="compare-count-badge">0</span>
+                    </li>
+                    <li class="nav-item position-relative" title="Tài khoản" style="cursor: pointer;">
+                        <span class="nav-link px-2"><i class="bi bi-person-circle fs-5"></i>  Tài khoản </span>
                     </li>
                 </ul>
             </div>
@@ -166,17 +223,9 @@
         </div>
     </div>
 
-    <!-- Footer (exact same as comparator.html) -->
-    <footer class="bg-light text-center text-lg-start mt-5 py-3">
-        <div class="container text-muted">
-            <p>&copy; 2024 AI Laptop Comparator. All rights reserved.</p>
-        </div>
-    </footer>
-
-    <footer class="bg-dark text-white text-center p-4 mt-5">
+    <footer>
         <div class="container">
-            <p class="mb-0">&copy; 2025 AI Laptop Advisor. Mọi quyền được bảo lưu.</p>
-            <p class="mb-0">Đồ án Phát triển Web Kinh doanh - Đại học ABC</p>
+            <p class="mb-0">&copy; 2025 AI Laptop Advisor.</p>
         </div>
     </footer>
 

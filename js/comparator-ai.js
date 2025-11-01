@@ -1,7 +1,8 @@
-
-// Keep the existing global allProducts array if you have it from the previous version.
-// If not, declare it here:
 let allProducts = []; // This will store all products loaded from JSON, not just selected ones.
+
+function getCompareList() {
+    return JSON.parse(localStorage.getItem('compareList')) || [];
+}
 
 function getCompareList() {
     return JSON.parse(localStorage.getItem('compareList')) || [];
@@ -32,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const container = document.getElementById('product-list-container');
+    const container = document.getElementById('product-selection-container');
     container.addEventListener('click', function(e) {
         if (e.target.classList.contains('product-checkbox')) {
             const checkedBoxes = document.querySelectorAll('.product-checkbox:checked');
@@ -61,21 +62,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// [THAY THẾ] - Hàm xử lý viền sáng (đã sửa lỗi)
 /**
  * Handles product card selection, toggling the 'selected' class based on checkbox state.
  * @param {HTMLInputElement} checkbox - The checkbox element that triggered the change.
  */
 function handleProductCardSelection(checkbox) {
-    const productId = checkbox.value;
-    const productCard = document.querySelector(`#card-${productId} .card`); 
+    // 'checkbox' là thẻ <input>
+    // .closest() sẽ tìm thẻ cha gần nhất khớp với selector '.card'
+    const productCard = checkbox.closest('.card'); 
+
     if (productCard) {
         if (checkbox.checked) {
             productCard.classList.add('selected');
         } else {
             productCard.classList.remove('selected');
         }
+    } else {
+        console.error('Không thể tìm thấy thẻ .card cha cho checkbox:', checkbox);
     }
 }
+
 
 async function loadProducts() {
     const container = document.getElementById('product-selection-container');
@@ -119,9 +126,12 @@ async function loadProducts() {
 
         // Render the selected products into the UI
         // ... (bên trong hàm loadProducts)
-        productsToCompare.forEach(product => {
+        productsToCompare.forEach((product, index) => {
+            const isChecked = index < 3;
             const productCardHTML = `
-                <div class="col-md-3 mb-4" id="card-${product.id}"> <div class="card product-card selected h-100" data-product-id="${product.id}">
+                <div class="col-md-3 mb-4" id="card-${product.id}">
+
+                    <div class="card product-card ${isChecked ? 'selected' : ''} h-100" data-product-id="${product.id}">
 
                         <button 
                             class="btn-close position-absolute top-0 end-0 p-2 bg-white" 
@@ -146,7 +156,7 @@ async function loadProducts() {
 
                             <div class="form-check mt-2">
                                 <input class="form-check-input product-checkbox" type="checkbox"
-                                        value="${product.id}" id="check-${product.id}" checked>
+                                        value="${product.id}" id="check-${product.id}" ${isChecked ? 'checked' : ''}>
                                 <label class="form-check-label" for="check-${product.id}">
                                     So sánh sản phẩm này
                                 </label>
@@ -229,6 +239,7 @@ function toggleLoading(isLoading) {
  * @param {Object} data - The comparison data received from the AI.
  * @param {Array<string>} selectedLaptopIDs - IDs of laptops that were selected.
  */
+
 function displayResults(data, selectedLaptopIDs) {
     const resultsContainer = document.getElementById('results-container');
     const summaryEl = document.getElementById('ai-summary');
@@ -240,35 +251,38 @@ function displayResults(data, selectedLaptopIDs) {
     }
 
     // 1. Display AI Summary
-    summaryEl.textContent = data.summary || 'Không có tóm tắt từ AI.';
+    // Sửa lỗi: Cập nhật bằng innerHTML để hiển thị thẻ <br>
+    summaryEl.innerHTML = data.summary || 'Không có tóm tắt từ AI.';
 
     // 2. Create Detailed Comparison Table
     let tableHTML = '<table class="table table-bordered table-striped align-middle">';
 
-    // Create Table Header (Laptop Names)
+    // === SỬA LỖI LOGIC TẠO HEADER ===
+    // 'data.laptop_names' là một MẢNG các tên (ví dụ: ['Dell XPS', 'Macbook Air'])
+    // 'selectedLaptopIDs' là một MẢNG các ID (ví dụ: ['dell_xps_15', 'macbook_air_m2'])
     tableHTML += '<thead class="table-dark"><tr><th>Tiêu chí</th>';
 
-    // Ensure laptop_names from data or use selected IDs for fallback
-    const laptopNamesInResponse = data.laptop_names || {};
-    const effectiveLaptopIDs = selectedLaptopIDs || Object.keys(laptopNamesInResponse);
-
-    effectiveLaptopIDs.forEach(id => {
-        // Use name from response if available, otherwise try to find from allProducts, or default to ID
-        const laptopName = laptopNamesInResponse[id] ||
-                           (allProducts.find(p => p.id === id)?.name) ||
-                           `Laptop ${id}`;
-        tableHTML += `<th>${laptopName}</th>`; // Add Laptop name to header
+    const laptopNames = data.laptop_names || [];
+    laptopNames.forEach(name => {
+        tableHTML += `<th>${name}</th>`; // Thêm TÊN laptop vào header
     });
     tableHTML += '</tr></thead>';
+    // === HẾT SỬA LỖI HEADER ===
+
 
     // Create Table Body (Feature rows)
     tableHTML += '<tbody>';
     if (data.comparison_details && data.comparison_details.length > 0) {
         data.comparison_details.forEach(item => {
-            tableHTML += `<tr><td><strong>${item.feature}</strong></td>`; // Criteria column
-            effectiveLaptopIDs.forEach(id => {
-                tableHTML += `<td>${item[id] !== undefined ? item[id] : 'N/A'}</td>`; // Get value for corresponding laptop ID
+            tableHTML += `<tr><td><strong>${item.feature}</strong></td>`; // Cột Tiêu chí
+
+            // === SỬA LỖI LOGIC TẠO BODY ===
+            // Lặp qua MẢNG ID (selectedLaptopIDs) để lấy đúng giá trị
+            selectedLaptopIDs.forEach(id => {
+                tableHTML += `<td>${item[id] !== undefined ? item[id] : 'N/A'}</td>`;
             });
+            // === HẾT SỬA LỖI BODY ===
+
             tableHTML += '</tr>';
         });
     } else {
@@ -284,35 +298,40 @@ function displayResults(data, selectedLaptopIDs) {
     resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+// [THÊM VÀO] - HÀM GIẢ LẬP AI (BỊ THIẾU) VÀ LOGIC NÂNG CẤP
+
 /**
- * MOCK FUNCTION
- * Returns sample data to test the UI without needing a real Noco AI API call.
- * This JSON structure is what Noco AI MUST return.
- * @param {Array<string>} selectedLaptopIDs - The IDs of laptops selected by the user.
- * @param {Object} priorities - User-defined priorities.
- * @returns {Promise<Object>} A promise that resolves with mock comparison data.
+ * MOCK FUNCTION (ĐÃ NÂNG CẤP)
+ * Trả về dữ liệu giả lập để kiểm tra UI.
+ * @param {Array<string>} selectedLaptopIDs - ID của các laptop được check.
+ * @param {Object} priorities - Giá trị của các thanh trượt.
+ * @param {string} userPrompt - Văn bản người dùng nhập.
+ * @returns {Promise<Object>} Một promise chứa dữ liệu so sánh.
  */
-// [HÀM MỚI] - getMockResponse (Đã nâng cấp)
 async function getMockResponse(selectedLaptopIDs, priorities, userPrompt) {
 
-    // Mô phỏng độ trễ của API
+    // Mô phỏng độ trễ của API (1.5 giây)
     await new Promise(resolve => setTimeout(resolve, 1500)); 
 
+    // Đảm bảo chúng ta có đủ 3 ID, ngay cả khi chỉ có 2 được chọn
     const id1 = selectedLaptopIDs[0];
     const id2 = selectedLaptopIDs[1];
     const id3 = selectedLaptopIDs.length > 2 ? selectedLaptopIDs[2] : null;
 
     // Lấy dữ liệu sản phẩm thật từ biến 'allProducts' toàn cục
-    const laptopData1 = allProducts.find(p => p.id === id1) || { name: 'Laptop 1 (Lỗi)', price: 0, cpu: 'N/A', ram: 'N/A', storage: 'N/A', gpu: 'N/A', battery: 'N/A', weight: 'N/A', screen: 'N/A' };
-    const laptopData2 = allProducts.find(p => p.id === id2) || { name: 'Laptop 2 (Lỗi)', price: 0, cpu: 'N/A', ram: 'N/A', storage: 'N/A', gpu: 'N/A', battery: 'N/A', weight: 'N/A', screen: 'N/A' };
+    // Thêm dữ liệu dự phòng (fallback) phòng trường hợp 'allProducts' chưa tải xong
+    const fallbackData = { name: 'N/A', price: 0, cpu: 'N/A', ram: 'N/A', storage: 'N/A', gpu: 'N/A', battery: 'N/A', weight: 'N/A', screen: 'N/A' };
+
+    const laptopData1 = allProducts.find(p => p.id === id1) || fallbackData;
+    const laptopData2 = allProducts.find(p => p.id === id2) || fallbackData;
     let laptopData3 = null;
     if(id3) {
-        laptopData3 = allProducts.find(p => p.id === id3) || { name: 'Laptop 3 (Lỗi)', price: 0, cpu: 'N/A', ram: 'N/A', storage: 'N/A', gpu: 'N/A', battery: 'N/A', weight: 'N/A', screen: 'N/A' };
+        laptopData3 = allProducts.find(p => p.id === id3) || fallbackData;
     }
 
     let aiSummary = "";
 
-    // ----- Logic AI Giả lập -----
+    // ----- Logic AI Giả lập (Đã nâng cấp) -----
     if (userPrompt && userPrompt.trim() !== "") {
         // Trường hợp 1: Người dùng nhập prompt
         aiSummary = `Phân tích dựa trên nhu cầu của bạn: "${userPrompt}". 
@@ -321,13 +340,18 @@ async function getMockResponse(selectedLaptopIDs, priorities, userPrompt) {
                     Tuy nhiên, hãy cân nhắc <strong>${laptopData2.name}</strong> nếu bạn cần mức giá tốt hơn.`;
     } else {
         // Trường hợp 2: Người dùng dùng thanh trượt
-        const maxPriority = Math.max(priorities.performance, priorities.mobility, priorities.price);
+        // Chuyển đổi giá trị string từ slider (ví dụ: "50") sang số
+        const perf = parseInt(priorities.performance, 10);
+        const mob = parseInt(priorities.mobility, 10);
+        const price = parseInt(priorities.price, 10);
 
-        if (maxPriority === priorities.performance) {
+        const maxPriority = Math.max(perf, mob, price);
+
+        if (maxPriority === perf) {
             aiSummary = `Bạn ưu tiên <strong>Hiệu năng</strong>. 
                         <br><br><strong>${laptopData1.name}</strong> là lựa chọn vượt trội với ${laptopData1.cpu} và ${laptopData1.gpu}. 
                         Nó sẽ xử lý các tác vụ nặng tốt nhất trong nhóm này.`;
-        } else if (maxPriority === priorities.mobility) {
+        } else if (maxPriority === mob) {
             aiSummary = `Bạn ưu tiên <strong>Tính di động</strong>. 
                         <br><br>Với trọng lượng chỉ ${laptopData2.weight} và pin ${laptopData2.battery}, 
                         <strong>${laptopData2.name}</strong> là người bạn đồng hành lý tưởng để di chuyển thường xuyên.`;
@@ -340,7 +364,10 @@ async function getMockResponse(selectedLaptopIDs, priorities, userPrompt) {
     // ----- Hết Logic AI Giả lập -----
 
     // Tạo bảng so sánh
-    const formatPrice = (price) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+    const formatPrice = (price) => {
+         const pPrice = parseFloat(price);
+         return isNaN(pPrice) ? "Liên hệ" : new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(pPrice);
+    };
 
     const mockComparisonDetails = [
         { "feature": "CPU", [id1]: laptopData1.cpu, [id2]: laptopData2.cpu },
@@ -356,20 +383,23 @@ async function getMockResponse(selectedLaptopIDs, priorities, userPrompt) {
     // Thêm laptop 3 nếu có
     if (laptopData3) {
         mockComparisonDetails.forEach(item => {
-            if (item.feature === "CPU") item[id3] = laptopData3.cpu;
-            if (item.feature === "RAM") item[id3] = laptopData3.ram;
-            if (item.feature === "GPU") item[id3] = laptopData3.gpu;
-            if (item.feature === "Lưu trữ") item[id3] = laptopData3.storage;
-            if (item.feature === "Giá") item[id3] = formatPrice(laptopData3.price);
-            if (item.feature === "Cân nặng") item[id3] = laptopData3.weight;
-            if (item.feature === "Pin") item[id3] = laptopData3.battery;
-            if (item.feature === "Màn hình") item[id3] = laptopData3.screen;
+            const key = item.feature;
+            if (key === "Giá") {
+                item[id3] = formatPrice(laptopData3.price);
+            } else if (key === "CPU") item[id3] = laptopData3.cpu;
+            else if (key === "RAM") item[id3] = laptopData3.ram;
+            else if (key === "GPU") item[id3] = laptopData3.gpu;
+            else if (key === "Lưu trữ") item[id3] = laptopData3.storage;
+            else if (key === "Cân nặng") item[id3] = laptopData3.weight;
+            else if (key === "Pin") item[id3] = laptopData3.battery;
+            else if (key === "Màn hình") item[id3] = laptopData3.screen;
         });
     }
 
     return {
         summary: aiSummary,
-        laptop_names: [laptopData1.name, laptopData2.name, laptopData3?.name].filter(Boolean), // Lọc ra null nếu không có lap 3
+        // Sửa lỗi: Trả về MẢNG TÊN, không phải object
+        laptop_names: [laptopData1.name, laptopData2.name, laptopData3?.name].filter(Boolean),
         comparison_details: mockComparisonDetails
     };
 }
@@ -392,16 +422,4 @@ function updateSliderStatus(sliderValue, outputId) {
     }
 }
 
-function removeFromComparePage(productId) {
-    // 1. Xóa khỏi localStorage
-    let compareList = getCompareList();
-    compareList = compareList.filter(id => id !== productId);
-    localStorage.setItem('compareList', JSON.stringify(compareList));
-
-    // 2. Xóa thẻ (card) khỏi giao diện
-    const cardElement = document.getElementById(`card-${productId}`);
-    if (cardElement) {
-        cardElement.remove();
-    }
-}
 
