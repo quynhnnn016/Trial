@@ -175,16 +175,16 @@ async function loadAllProducts() {
 
             const productCardHTML = `
             <div class="col">
-                <div class="card h-100 product-card shadow-sm">
+                <div class="card product-card shadow-sm">
                     <img src="${product.image}" class="card-img-top" alt="${product.name}">
 
                     <div class="card-body d-flex flex-column">
-                        <h5 class="card-title product-name">${product.name}</h5>
-                        <p class="card-text text-muted product-specs">${product.cpu}, ${product.ram}</p>
+                        <h5 class="card-title product-name mb-1">${product.name}</h5>
+                        <p class="card-text text-muted product-specs mb-2">${product.cpu}, ${product.ram}</p>
 
-                        <p class="card-text fw-bold fs-5 mt-auto">${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.price)}</p>
+                        <p class="card-text fw-bold fs-5 mt-3">${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.price)}</p>
 
-                        <div class="d-grid gap-2">
+                        <div class="d-grid gap-1">
                             <button class="btn btn-success" onclick="addToCart(this, '${product.id}')">
                                 <i class="bi bi-cart-plus"></i> Thêm vào giỏ
                             </button>

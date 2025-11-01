@@ -3,13 +3,13 @@
 /* General Body Styling */
 body {
     font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    background-color: #f8f9fa; /* Light background */
+    background-color: #F4F4F4; /* Light background */
     color: #333;
 }
 
 /* Navbar Customization */
 .navbar-dark.bg-primary {
-    background-color: #004aad !important; /* Dark blue primary color */
+    background-color: #0C2B4E !important; /* Dark blue primary color */
     color: #fff;
 }
 
@@ -19,9 +19,71 @@ body {
     color: #fff;
 }
 
+.menu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 10px;
+}
+
+.menu li {
+  position: relative;
+}
+
+.menu a, .dropbtn {
+  background: transparent;
+  border: none;
+  color: #fff;
+  padding: 8px 12px;
+  text-decoration: none;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.menu a:hover, .dropbtn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+/* Dropdown menu */
+.dropdown-content {
+  display: none;
+  position: absolute;
+  top: 36px;
+  left: 0;
+  background: #fff;
+  min-width: 160px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border-radius: 6px;
+  z-index: 10;
+}
+
+.dropdown-content li a {
+  color: #333;
+  display: block;
+}
+
+.dropdown-content li a:hover {
+  background: #eef3ff;
+}
+
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+/* 3 nút topbar bên trái */
+.navbar-nav.ms-auto .nav-item .nav-link {
+    border-radius: 4px;
+    color: #F4F4F4;
+}
+
+.navbar-nav.ms-auto .nav-item .nav-link:hover {
+    /* Áp dụng nền mờ khi di chuột vào (đúng như bạn yêu cầu) */
+    background: rgba(255, 255, 255, 0.2);
+}
 /* Section Headings */
 h2, h3 {
-    color: #004aad; /* Dark blue for headings */
+    color: #1A3D64; /* Dark blue for headings */
     font-weight: 600;
 }
 
@@ -30,8 +92,6 @@ h2, h3 {
     background-color: #eaf1f8; /* Lighter blue for card */
     border: 1px solid #d0e4f7;
 }
-
-
 
 /* Product Cards */
 .product-card {
@@ -57,18 +117,18 @@ h2, h3 {
 .product-card img {
     max-height: 200px; /* Limit image height */
     object-fit: contain; /* Ensure image is fully visible */
-    padding: 1rem;
+    padding: 1.0rem;
     background-color: #ffffff;
 }
 
 .product-card .card-body {
-    padding: 1.25rem;
+    padding: 1.0rem;
 }
 
 .product-card .card-title {
     font-size: 1.1rem;
     font-weight: 600;
-    color: #004aad;
+    color: #1D546C;
 }
 
 .product-card .card-text {
@@ -82,7 +142,7 @@ h2, h3 {
     overflow: hidden;
 }
 .product-specs {
-    height: 5em; /* Giới hạn 2-3 dòng */
+    height: 4em; /* Giới hạn 2-3 dòng */
     overflow: hidden;
 }
 
@@ -145,7 +205,7 @@ h2, h3 {
 }
 
 .btn-primary:hover {
-    background-color: #003a80;
+    background-color: #4d88cf;
     border-color: #003a80;
 }
 
@@ -167,7 +227,7 @@ h2, h3 {
 #ai-summary {
     font-size: 1.15rem;
     line-height: 1.6;
-    color: #1a4f00; /* Darker green for success alert text */
+    color: #B7E5CD; /* Darker green for success alert text */
     background-color: #e6ffed; /* Lighter green for success alert */
     border-color: #badbcc;
 }
@@ -227,5 +287,27 @@ footer {
     .btn-primary {
         padding: 0.6rem 1.5rem;
         font-size: 1rem;
+    }
+}
+
+/* Định nghĩa chiều cao và kiểu hiển thị cho ảnh banner */
+.carousel-banner-img {
+    /* Bạn có thể thay đổi chiều cao này theo ý muốn */
+    height: 450px; 
+    
+    /* Đây là thuộc tính quan trọng nhất:
+       - Nó sẽ phóng to hoặc thu nhỏ ảnh để lấp đầy khung
+       - Sau đó cắt bớt phần thừa (nếu có) thay vì làm méo ảnh
+    */
+    object-fit: cover; 
+    
+    /* Đảm bảo ảnh luôn rộng 100% */
+    width: 100%;
+}
+
+/* Tùy chỉnh chiều cao cho màn hình di động (khuyến nghị) */
+@media (max-width: 768px) {
+    .carousel-banner-img {
+        height: 250px; /* Giảm chiều cao trên điện thoại */
     }
 }
