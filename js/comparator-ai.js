@@ -3,6 +3,9 @@
 // If not, declare it here:
 let allProducts = []; // This will store all products loaded from JSON, not just selected ones.
 
+function getCompareList() {
+    return JSON.parse(localStorage.getItem('compareList')) || [];
+}
 /**
  * Runs all initialization functions once the DOM is fully loaded.
  */
@@ -28,6 +31,20 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    const container = document.getElementById('product-list-container');
+    container.addEventListener('click', function(e) {
+        if (e.target.classList.contains('product-checkbox')) {
+            const checkedBoxes = document.querySelectorAll('.product-checkbox:checked');
+            const maxCompare = 3;
+
+            if (checkedBoxes.length > maxCompare) {
+                alert(`Bạn chỉ có thể chọn tối đa ${maxCompare} sản phẩm để so sánh cùng một lúc.`);
+                e.target.checked = false; // Hủy lựa chọn
+            }
+        }
+    });
+
     // Lắng nghe sự kiện thay đổi của thanh trượt
     const perfSlider = document.getElementById('priority-performance');
     const mobSlider = document.getElementById('priority-mobility');
@@ -50,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
  */
 function handleProductCardSelection(checkbox) {
     const productId = checkbox.value;
-    const productCard = document.getElementById(`card-${productId}`);
+    const productCard = document.querySelector(`#card-${productId} .card`); 
     if (productCard) {
         if (checkbox.checked) {
             productCard.classList.add('selected');
@@ -60,12 +77,6 @@ function handleProductCardSelection(checkbox) {
     }
 }
 
-
-/**
- * NEW VERSION: Loads products from the JSON file, but only displays
- * those that have been selected by the user (stored in localStorage) from the shop page.
- * It also pre-checks their checkboxes.
- */
 async function loadProducts() {
     const container = document.getElementById('product-selection-container');
     // Retrieve the list of product IDs from localStorage
@@ -109,31 +120,41 @@ async function loadProducts() {
         // Render the selected products into the UI
         // ... (bên trong hàm loadProducts)
         productsToCompare.forEach(product => {
-                const productCardHTML = `
-                    <div class="col-md-3 mb-4"> <div class="card product-card selected h-100" data-product-id="${product.id}" id="card-${product.id}">
-                            <img src="${product.image}" class="card-img-top" alt="${product.name}">
-                            <div class="card-body d-flex flex-column">
-                                <h5 class="card-title">${product.name}</h5>
-                                
-                                <ul class="list-unstyled text-muted small mt-2">
-                                    <li title="CPU"><i class="bi bi-cpu-fill"></i> ${product.cpu}</li>
-                                    <li title="RAM"><i class="bi bi-memory"></i> ${product.ram}</li>
-                                    <li title="Storage"><i class="bi bi-device-hdd"></i> ${product.storage}</li>
-                                    <li title="Battery"><i class="bi bi-battery-charging"></i> ${product.battery}</li>
-                                </ul>
-                                <p class="card-text fw-bold fs-5 mt-auto">${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.price)}</p>
-                                
-                                <div class="form-check mt-2">
-                                    <input class="form-check-input product-checkbox" type="checkbox"
+            const productCardHTML = `
+                <div class="col-md-3 mb-4" id="card-${product.id}"> <div class="card product-card selected h-100" data-product-id="${product.id}">
+
+                        <button 
+                            class="btn-close position-absolute top-0 end-0 p-2 bg-white" 
+                            style="z-index: 10;" 
+                            aria-label="Close"
+                            onclick="removeFromComparePage('${product.id}')"
+                            title="Bỏ sản phẩm này khỏi danh sách">
+                        </button>
+
+                        <img src="${product.image}" class="card-img-top" alt="${product.name}">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">${product.name}</h5>
+
+                            <ul class="list-unstyled text-muted small mt-2">
+                                <li title="CPU"><i class="bi bi-cpu-fill"></i> ${product.cpu}</li>
+                                <li title="RAM"><i class="bi bi-memory"></i> ${product.ram}</li>
+                                <li title="Storage"><i class="bi bi-device-hdd"></i> ${product.storage}</li>
+                                <li title="Battery"><i class="bi bi-battery-charging"></i> ${product.battery}</li>
+                            </ul>
+
+                            <p class="card-text fw-bold fs-5 mt-auto">${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.price)}</p>
+
+                            <div class="form-check mt-2">
+                                <input class="form-check-input product-checkbox" type="checkbox"
                                         value="${product.id}" id="check-${product.id}" checked>
-                                    <label class="form-check-label" for="check-${product.id}">
-                                        So sánh sản phẩm này
-                                    </label>
-                                </div>
+                                <label class="form-check-label" for="check-${product.id}">
+                                    So sánh sản phẩm này
+                                </label>
                             </div>
                         </div>
                     </div>
-                `;
+                </div>
+            `;
                 container.insertAdjacentHTML('beforeend', productCardHTML);
             });
 
@@ -150,8 +171,8 @@ async function loadProducts() {
  */
 async function handleCompareClick() {
     // 1. Collect data from the UI
-    const selectedCheckboxes = document.querySelectorAll('.product-checkbox:checked');
-    const selectedLaptopIDs = Array.from(selectedCheckboxes).map(cb => cb.value);
+    const checkedBoxes = document.querySelectorAll('.product-checkbox:checked');
+    const selectedLaptopIDs = Array.from(checkedBoxes).map(cb => cb.value);
 
     const priorities = {
         performance: document.getElementById('priority-performance')?.value || 50,
@@ -162,8 +183,8 @@ async function handleCompareClick() {
     const userPromptText = document.getElementById('user-prompt').value;
 
     // 2. Validate data
-    if (selectedLaptopIDs.length < 2 || selectedLaptopIDs.length > 3) {
-        alert('Vui lòng chọn 2 hoặc 3 laptop để so sánh.');
+    if (selectedLaptopIDs.length < 2) {
+        alert('Vui lòng chọn ít nhất 2 sản phẩm (đánh dấu tick) để bắt đầu so sánh.');
         return;
     }
 
@@ -370,3 +391,17 @@ function updateSliderStatus(sliderValue, outputId) {
         outputEl.textContent = 'Rất cao';
     }
 }
+
+function removeFromComparePage(productId) {
+    // 1. Xóa khỏi localStorage
+    let compareList = getCompareList();
+    compareList = compareList.filter(id => id !== productId);
+    localStorage.setItem('compareList', JSON.stringify(compareList));
+
+    // 2. Xóa thẻ (card) khỏi giao diện
+    const cardElement = document.getElementById(`card-${productId}`);
+    if (cardElement) {
+        cardElement.remove();
+    }
+}
+
