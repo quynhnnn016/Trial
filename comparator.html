@@ -15,6 +15,7 @@
     <!-- Header -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top shadow-sm">
         <div class="container-fluid">
+            
             <a class="navbar-brand fw-bold" href="index.html">
                 <i class="bi bi-laptop"></i>
                 AI Laptop Advisor
@@ -25,37 +26,30 @@
             </button>
 
             <div class="collapse navbar-collapse" id="mainNav">
+                
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="index.html">Trang chủ</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Sản phẩm mới</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Khuyến mãi</a>
+                        <a class="nav-link active" aria-current="page" href="index.html">
+                            <i class="bi bi-arrow-left-circle me-1"></i>
+                            Quay lại Trang chủ
+                        </a>
                     </li>
                 </ul>
-
-                <form class="d-flex mx-auto" role="search">
-                    <input class="form-control me-2" type="search" placeholder="Tìm kiếm laptop..." aria-label="Search">
-                    <button class="btn btn-outline-light" type="submit">Tìm</button>
-                </form>
-
                 <ul class="navbar-nav ms-auto flex-row">
-                    <li class="nav-item">
-                        <a class="nav-link px-2" href="#" title="Giỏ hàng">
-                            <i class="bi bi-cart fs-5"></i>
-                        </a>
+                    <li class="nav-item position-relative" title="Giỏ hàng" 
+                        data-bs-toggle="offcanvas" data-bs-target="#userSidebar" style="cursor: pointer;">
+                        
+                        <span class="nav-link px-2"><i class="bi bi-cart fs-5"></i> <span class_exists="d-lg-none">Giỏ hàng</span></span>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link px-2" href="comparator.html" title="So sánh sản phẩm">
-                            <i class="bi bi-bar-chart-steps fs-5"></i>
-                        </a>
+                    
+                    <li class="nav-item position-relative" title="Sản phẩm Yêu thích"
+                        data-bs-toggle="offcanvas" data-bs-target="#userSidebar" style="cursor: pointer;">
+                        
+                        <span class="nav-link px-2"><i class="bi bi-heart fs-5"></i> <span class_exists="d-lg-none">Yêu thích</span></span>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link px-2" href="#" title="Tài khoản">
-                            <i class="bi bi-person-circle fs-5"></i>
+                    
+                    <li class="nav-item position-relative" title="Tài khoản">
+                        <a href="#" class="nav-link px-2"> <i class="bi bi-person-circle fs-5"></i> <span class_exists="d-lg-none">Tài khoản</span>
                         </a>
                     </li>
                 </ul>
@@ -68,7 +62,7 @@
 
         <!-- Section 1: Product Selection -->
         <section class="mb-5">
-            <h2 class="mb-4 text-center">1. Chọn Laptop để So sánh (Tối đa 3)</h2>
+            <h3 class="mb-4 text-center">Chọn Laptop để So sánh (Tối đa 3)</h3>
             <div class="row g-4" id="product-selection-container">
                 <!-- Product cards will be loaded here by JavaScript -->
             </div>
@@ -76,7 +70,7 @@
 
         <!-- Section 2: Set Priorities -->
         <section class="container my-4" id="priority-section">
-            <h2 class="mb-3">2. Đặt mức độ ưu tiên của bạn</h2>
+            <h3 class="mb-3">Đặt mức độ ưu tiên của bạn</h3>
             <div class="card p-4 shadow-sm">
                 <div class="row g-4">
                     <div class="col-lg-8">
