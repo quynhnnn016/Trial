@@ -301,92 +301,427 @@ function removeFromComparePage(productId) {
     }
 }
 
-/**
- * HÀM MOCK AI (Đã nâng cấp)
- */
+// [THAY THẾ TOÀN BỘ] - getMockResponse (Cấp 4 - Đã sửa lỗi)
+
 async function getMockResponse(selectedLaptopIDs, priorities, userPrompt) {
 
     // Mô phỏng độ trễ của API
-    await new Promise(resolve => setTimeout(resolve, 1500)); 
+    await new Promise(resolve => setTimeout(resolve, 1500));
 
-    const id1 = selectedLaptopIDs[0];
-    const id2 = selectedLaptopIDs[1];
-    const id3 = selectedLaptopIDs.length > 2 ? selectedLaptopIDs[2] : null;
+    // [LỖI 1 ĐÃ XÓA] - ĐÃ XÓA MẢNG 'allProducts' BỊ DÁN CỨNG Ở ĐÂY.
+    // Hàm này bây giờ sẽ sử dụng biến 'allProducts' TOÀN CỤC (global) 
+    // do hàm 'loadProducts()' tải lên.
 
-    const fallbackData = { name: 'N/A', price: 0, cpu: 'N/A', ram: 'N/A', storage: 'N/A', gpu: 'N/A', battery: 'N/A', weight: 'N/A', screen: 'N/A' };
-    const laptopData1 = allProducts.find(p => p.id === id1) || fallbackData;
-    const laptopData2 = allProducts.find(p => p.id === id2) || fallbackData;
-    let laptopData3 = null;
-    if(id3) {
-        laptopData3 = allProducts.find(p => p.id === id3) || fallbackData;
-    }
+    // --- BỘ NÃO CỦA AI (AI HELPERS) ---
+    // (Toàn bộ 'aiHelpers' (dòng 31-426) của bạn được giữ nguyên)
+    const aiHelpers = {
 
-    let aiSummary = "";
+        // 1. CÔNG CỤ LƯỢNG HÓA (Normalize)
+        normalizeSpec: (specString, type) => {
+            if (!specString) return 0;
+            const s = specString.toLowerCase();
 
-    // ----- Logic AI Giả lập -----
-    if (userPrompt && userPrompt.trim() !== "") {
-        aiSummary = `Phân tích dựa trên nhu cầu của bạn: "${userPrompt}". 
-                    <br><br> Dựa trên mô tả, <strong>${laptopData1.name}</strong> dường như là lựa chọn phù hợp nhất. 
-                    Nó cân bằng tốt giữa ${laptopData1.cpu} và ${laptopData1.gpu}. 
-                    Tuy nhiên, hãy cân nhắc <strong>${laptopData2.name}</strong> nếu bạn cần mức giá tốt hơn.`;
-    } else {
-        const perf = parseInt(priorities.performance, 10);
-        const mob = parseInt(priorities.mobility, 10);
-        const priceVal = parseInt(priorities.price, 10);
-        const maxPriority = Math.max(perf, mob, priceVal);
-        
-        if (maxPriority === perf) {
-            aiSummary = `Bạn ưu tiên <strong>Hiệu năng</strong>. 
-                        <br><br><strong>${laptopData1.name}</strong> là lựa chọn vượt trội với ${laptopData1.cpu} và ${laptopData1.gpu}. 
-                        Nó sẽ xử lý các tác vụ nặng tốt nhất trong nhóm này.`;
-        } else if (maxPriority === mob) {
-            aiSummary = `Bạn ưu tiên <strong>Tính di động</strong>. 
-                        <br><br>Với trọng lượng chỉ ${laptopData2.weight} và pin ${laptopData2.battery}, 
-                        <strong>${laptopData2.name}</strong> là người bạn đồng hành lý tưởng.`;
-        } else {
-            aiSummary = `Bạn ưu tiên <strong>Giá cả</strong>. 
-                        <br><br>Với mức giá ${new Intl.NumberFormat('vi-VN').format(laptopData2.price)}, 
-                        <strong>${laptopData2.name}</strong> cung cấp giá trị tốt nhất.`;
+            switch (type) {
+                case 'cpu':
+                    if (s.includes('m3 max') || s.includes('i9-14') || s.includes('ryzen 9 8')) return 10;
+                    if (s.includes('m3 pro') || s.includes('i9-13') || s.includes('ryzen 9 7')) return 9.5;
+                    if (s.includes('m3') || s.includes('i9') || s.includes('ryzen 9')) return 9;
+                    if (s.includes('m2 max') || s.includes('i7-14') || s.includes('ryzen 7 8')) return 8.5;
+                    if (s.includes('m2 pro') || s.includes('i7-13') || s.includes('ryzen 7 7')) return 8;
+                    if (s.includes('m2') || s.includes('i7') || s.includes('ryzen 7')) return 7;
+                    if (s.includes('m1 pro') || s.includes('i5-13') || s.includes('ryzen 5 7')) return 6.5;
+                    if (s.includes('m1') || s.includes('i5') || s.includes('ryzen 5')) return 6;
+                    if (s.includes('i3') || s.includes('ryzen 3')) return 4;
+                    return 2; // Các CPU cơ bản khác
+                case 'gpu':
+                    if (s.includes('rtx 4090')) return 10;
+                    if (s.includes('rtx 4080')) return 9.5;
+                    if (s.includes('rtx 4070') || s.includes('m3 pro') || s.includes('m3 max')) return 9; // Apple GPU cao cấp
+                    if (s.includes('rtx 4060') || s.includes('m2 pro') || s.includes('m2 max')) return 8;
+                    if (s.includes('rtx 3070') || s.includes('rtx 3080')) return 7;
+                    if (s.includes('rtx 3050') || s.includes('rtx 2060')) return 6;
+                    if (s.includes('gtx 1650') || s.includes('amd radeon graphics')) return 5; // Card rời phổ thông/GPU tích hợp AMD
+                    if (s.includes('iris xe') || s.includes('uhd graphics') || s.includes('m1') || s.includes('m2')) return 3; // GPU tích hợp Intel/Apple
+                    return 2; // Các GPU cơ bản khác
+                case 'ram':
+                    const ram = parseInt(s.replace('gb', ''));
+                    if (ram >= 64) return 10;
+                    if (ram >= 32) return 9;
+                    if (ram >= 16) return 7;
+                    if (ram >= 8) return 5;
+                    if (ram >= 4) return 3;
+                    return 2;
+                case 'battery':
+                    const hrsMatch = s.match(/upto (\d+)\s*hrs?/);
+                    if (hrsMatch && hrsMatch[1]) return parseFloat(hrsMatch[1]) / 2; // Chuẩn hóa về thang 10 (vd: 20hrs = 10 điểm)
+                    const whMatch = s.match(/(\d+)\s*wh/);
+                    if (whMatch && whMatch[1]) return parseFloat(whMatch[1]) / 10; // Chuẩn hóa về thang 10 (vd: 100Wh = 10 điểm)
+                    return 4; // Giá trị mặc định nếu không parse được
+                case 'weight':
+                    const kgMatch = s.match(/([\d.]+)\s*kg/);
+                    if (kgMatch && kgMatch[1]) {
+                        const weightKg = parseFloat(kgMatch[1]);
+                        if (weightKg <= 1.0) return 10;
+                        if (weightKg <= 1.3) return 9;
+                        if (weightKg <= 1.6) return 7;
+                        if (weightKg <= 2.0) return 5;
+                        if (weightKg <= 2.5) return 3;
+                        return 1;
+                    }
+                    return 5; // Giá trị trung bình nếu không parse được
+                case 'storage': // Thêm đánh giá Storage
+                    const storageVal = parseInt(s.replace('tb', '000').replace('gb', ''));
+                    if (s.includes('ssd')) {
+                        if (storageVal >= 2000) return 10; // 2TB SSD
+                        if (storageVal >= 1000) return 9;  // 1TB SSD
+                        if (storageVal >= 512) return 7;   // 512GB SSD
+                        if (storageVal >= 256) return 5;   // 256GB SSD
+                    }
+                    if (s.includes('hdd') && storageVal >= 1000) return 3; // 1TB HDD
+                    return 2;
+                case 'screen': // Thêm đánh giá Screen
+                    if (s.includes('oled') || s.includes('xdr')) return 10;
+                    if (s.includes('4k') || s.includes('uhd')) return 9;
+                    if (s.includes('qhd') || s.includes('wqxga')) return 8;
+                    if (s.includes('fhd+') || s.includes('retina')) return 7;
+                    if (s.includes('fhd')) return 6;
+                    return 4;
+            }
+            return 0;
+        },
+
+        // 2. CÔNG CỤ PHÂN TÍCH PROMPT (NLU)
+        getNeedsProfile: (prompt, sliders) => {
+            let profile = {
+                weights: { performance: 1, mobility: 1, price: 1, balance: 0.5, ram: 1, storage: 1, screen: 1 }, // Thêm trọng số cho RAM, Storage, Screen
+                filters: [],
+                reason: "cho một nhu cầu cân bằng.",
+                userKeywords: [] // Lưu lại các từ khóa người dùng để nhắc lại
+            };
+            const p = prompt.toLowerCase();
+
+            const keywordMap = {
+                // Ưu tiên (Weights)
+                'game': { weights: { performance: 3.5, gpu: 2.0, mobility: 0.5, balance: 0, screen: 1.5 }, reason: "chơi game đồ họa cao" },
+                'đồ họa': { weights: { performance: 3.0, gpu: 2.5, ram: 1.5, screen: 1.5, balance: 0 }, reason: "làm đồ họa chuyên nghiệp" },
+                'render': { weights: { performance: 3.0, cpu: 1.5, gpu: 2.0, ram: 2.0, balance: 0 }, reason: "render video, 3D" },
+                'lập trình': { weights: { performance: 2.5, ram: 2.0, cpu: 1.5, storage: 1.5, balance: 0 }, reason: "lập trình và phát triển phần mềm" },
+                'văn phòng': { weights: { performance: 0.5, price: 2.0, mobility: 1.5, balance: 0.8 }, reason: "công việc văn phòng cơ bản" },
+                'pin trâu': { weights: { mobility: 3.0, performance: 0.7, balance: 0 }, reason: "thời lượng pin dài" },
+                'di chuyển': { weights: { mobility: 3.0, weight: 2.0, performance: 0.7, balance: 0 }, reason: "sự di động, gọn nhẹ" },
+                'nhẹ': { weights: { mobility: 3.0, weight: 2.5, performance: 0.7, balance: 0 }, reason: "trọng lượng siêu nhẹ" },
+                'giá rẻ': { weights: { price: 3.5, performance: 0.5, mobility: 0.8, balance: 0 }, reason: "mức giá phải chăng" },
+                'sinh viên': { weights: { price: 2.5, mobility: 1.5, performance: 1.0, balance: 0.7 }, reason: "phù hợp cho sinh viên" },
+                'doanh nhân': { weights: { mobility: 2.0, screen: 1.5, performance: 1.5, price: 1.0, balance: 0.5 }, reason: "doanh nhân, chuyên nghiệp" },
+                'đa nhiệm': { weights: { ram: 2.5, cpu: 1.5, performance: 2.0, balance: 0 }, reason: "đa nhiệm mượt mà" },
+                'màn hình đẹp': { weights: { screen: 2.5, gpu: 1.0, performance: 1.0, balance: 0 }, reason: "chất lượng màn hình hiển thị" },
+                'lưu trữ nhiều': { weights: { storage: 2.5, price: 0.8, balance: 0 }, reason: "dung lượng lưu trữ lớn" },
+
+                // Ràng buộc cứng (Hard Filters)
+                'không game': { filters: [(s) => s.gpu < 6], reason: "loại bỏ máy gaming (GPU > 6)" },
+                'không card rời': { filters: [(s) => s.gpu < 6], reason: "loại bỏ máy có card đồ họa rời" },
+                '16gb ram': { filters: [(s) => s.ram >= 7], reason: "yêu cầu tối thiểu 16GB RAM" }, // điểm 7 tương ứng 16GB
+                '32gb ram': { filters: [(s) => s.ram >= 9], reason: "yêu cầu tối thiểu 32GB RAM" }, // điểm 9 tương ứng 32GB
+                'ssd': { filters: [(s, p) => p.storage.toLowerCase().includes('ssd')], reason: "chỉ ổ cứng SSD" },
+                'dưới 20 triệu': { filters: [(s, p) => p.price < 20000000], reason: "giới hạn giá dưới 20 triệu VNĐ" },
+                'dưới 30 triệu': { filters: [(s, p) => p.price < 30000000], reason: "giới hạn giá dưới 30 triệu VNĐ" },
+                'dưới 1.5 kg': { filters: [(s) => s.weight >= 7], reason: "trọng lượng dưới 1.5kg" } // điểm 7 tương ứng <= 1.6kg
+            };
+
+            // Ưu tiên Prompt của người dùng
+            if (p.trim().length > 3) {
+                let appliedKeywords = [];
+                for (const keyword in keywordMap) {
+                    if (p.includes(keyword)) {
+                        const rule = keywordMap[keyword];
+                        if (rule.weights) {
+                            for (const key in rule.weights) {
+                                profile.weights[key] = (profile.weights[key] || 0) + rule.weights[key];
+                            }
+                        }
+                        if (rule.filters) {
+                            // Truyền lý do vào hàm filter
+                            const filterFn = rule.filters[0];
+                            const filterWithReason = (s, p) => filterFn(s, p);
+                            filterWithReason.reason = rule.reason; // Gán lý do
+                            profile.filters.push(filterWithReason);
+                            appliedKeywords.push(rule.reason);
+                        }
+                        profile.userKeywords.push(keyword); // Lưu từ khóa gốc
+                    }
+                }
+                if(profile.userKeywords.length > 0) {
+                     profile.reason = `dựa trên mong muốn của bạn về <strong>"${prompt}"</strong>. Tôi đã hiểu rằng bạn đang tìm kiếm một chiếc laptop ${profile.userKeywords.join(', ')}.`;
+                } else {
+                     profile.reason = `dựa trên mong muốn của bạn về <strong>"${prompt}"</strong>. Tôi sẽ cố gắng tìm ra lựa chọn tối ưu nhất.`;
+                }
+                 if(appliedKeywords.length > 0) {
+                    profile.reason += "<br>Các máy đã được lọc dựa trên: " + appliedKeywords.join(', ') + ".";
+                }
+                return profile;
+            }
+
+            // Nếu không có prompt, dùng thanh trượt
+            const perfVal = parseInt(sliders.performance, 10);
+            const mobVal = parseInt(sliders.mobility, 10);
+            const priceVal = parseInt(sliders.price, 10);
+
+            profile.weights.performance = (perfVal >= 50 ? (perfVal / 33.3) : 0.5); 
+            profile.weights.mobility = (mobVal >= 50 ? (mobVal / 33.3) : 0.5);
+            profile.weights.price = (priceVal >= 50 ? (priceVal / 33.3) : 0.5);
+            profile.weights.balance = 0; 
+
+            profile.weights.ram = profile.weights.performance * 0.8;
+            profile.weights.storage = profile.weights.price * 0.7;
+            profile.weights.screen = profile.weights.performance * 0.5 + profile.weights.mobility * 0.3;
+
+            profile.reason = `vì bạn đã ưu tiên các yếu tố (Hiệu năng: ${perfVal}%, Di động: ${mobVal}%, Giá cả: ${priceVal}%).`;
+            return profile;
+        },
+
+        // 3. CÔNG CỤ CHẤM ĐIỂM (Scoring Engine)
+        scoreProduct: (product, needs) => {
+            const specs = {
+                cpu: aiHelpers.normalizeSpec(product.cpu, 'cpu'),
+                gpu: aiHelpers.normalizeSpec(product.gpu, 'gpu'),
+                ram: aiHelpers.normalizeSpec(product.ram, 'ram'),
+                battery: aiHelpers.normalizeSpec(product.battery, 'battery'),
+                weight: aiHelpers.normalizeSpec(product.weight, 'weight'),
+                price: parseFloat(product.price),
+                storage: aiHelpers.normalizeSpec(product.storage, 'storage'), 
+                screen: aiHelpers.normalizeSpec(product.screen, 'screen') 
+            };
+
+            // Áp dụng Bộ lọc (Cấp 2)
+            let filteredOutReason = null;
+            for (const filter of needs.filters) {
+                if (!filter(specs, product)) {
+                    filteredOutReason = filter.reason || "không đáp ứng tiêu chí"; // Lưu lại lý do bị lọc
+                    return { finalScore: -1, specs, product, filteredOutReason }; // Bị loại
+                }
+            }
+
+            // Tính điểm cho các tiêu chí chính
+            const performanceScore = (specs.cpu * (needs.weights.cpu || 1.5)) + (specs.gpu * (needs.weights.gpu || 1.0)) + (specs.ram * (needs.weights.ram || 1.0));
+            const mobilityScore = (specs.battery * 1.5) + (specs.weight * 1.5); // Điểm trọng lượng ngược
+            const priceScore = (1e10 / (specs.price + 1)); 
+            const storageScore = specs.storage * (needs.weights.storage || 1.0);
+            const screenScore = specs.screen * (needs.weights.screen || 1.0);
+
+            // Tính điểm Cân bằng
+            const scoresToBalance = [];
+            if (needs.weights.performance > 0) scoresToBalance.push(performanceScore * needs.weights.performance);
+            if (needs.weights.mobility > 0) scoresToBalance.push(mobilityScore * needs.weights.mobility);
+            if (needs.weights.price > 0) scoresToBalance.push(priceScore * needs.weights.price);
+            if (needs.weights.storage > 0) scoresToBalance.push(storageScore * needs.weights.storage);
+            if (needs.weights.screen > 0) scoresToBalance.push(screenScore * needs.weights.screen);
+
+            let balanceScore = 0;
+            if (scoresToBalance.length > 1) {
+                const mean = scoresToBalance.reduce((a, b) => a + b, 0) / scoresToBalance.length;
+                const deviation = Math.sqrt(scoresToBalance.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b, 0) / scoresToBalance.length);
+                balanceScore = (1e10 / (deviation + 1)); 
+            }
+
+            // Áp dụng tất cả các trọng số vào điểm cuối cùng
+            const finalScore =
+                (performanceScore * needs.weights.performance) +
+                (mobilityScore * needs.weights.mobility) +
+                (priceScore * needs.weights.price) +
+                (storageScore * needs.weights.storage) +
+                (screenScore * needs.weights.screen) +
+                (balanceScore * needs.weights.balance); 
+
+            return { finalScore, specs, product, filteredOutReason: null };
+        },
+
+        // 4. CÔNG CỤ TẠO NGÔN NGỮ (NLG)
+        generateSummary: (scoredProducts, needsProfile, userPrompt) => {
+
+            const filteredOutProducts = scoredProducts.filter(p => p.finalScore === -1);
+            const qualifiedProducts = scoredProducts.filter(p => p.finalScore > 0);
+
+            let summary = `Chào bạn! Tôi đã nhận được yêu cầu của bạn ${userPrompt ? `về <strong>"${userPrompt}"</strong>` : ""}.\n\n`;
+
+            if (scoredProducts.length === 0) {
+                return `Rất tiếc, tôi không tìm thấy bất kỳ sản phẩm nào để so sánh. Vui lòng chọn một số laptop để tôi có thể hỗ trợ bạn nhé!`;
+            }
+
+            if (qualifiedProducts.length === 0) {
+                summary += `Sau khi xem xét kỹ lưỡng ${scoredProducts.length} sản phẩm, tôi nhận thấy rằng <strong>không có chiếc laptop nào</strong> trong danh sách này hoàn toàn đáp ứng các tiêu chí khắt khe của bạn. \n`;
+                if (filteredOutProducts.length > 0) {
+                    summary += `Đặc biệt, một số máy đã bị loại vì ${filteredOutProducts[0].filteredOutReason || "không đạt yêu cầu cơ bản"}. `;
+                }
+                summary += `Bạn có muốn thử với các tiêu chí hoặc danh sách sản phẩm khác không?`;
+                return summary.replace(/\n/g, '<br>'); // Thay thế \n bằng <br>
+            }
+
+            // Sắp xếp các máy đã qua lọc
+            qualifiedProducts.sort((a, b) => b.finalScore - a.finalScore);
+
+            const winner = qualifiedProducts[0];
+            const runnerUp = qualifiedProducts.length > 1 ? qualifiedProducts[1] : null;
+
+            summary += `Dựa trên ${needsProfile.reason}, tôi đã phân tích ${scoredProducts.length} sản phẩm bạn cung cấp.\n\n`;
+            summary += `Kết quả cho thấy, <strong>${winner.product.name}</strong> chính là lựa chọn sáng giá nhất dành cho bạn! \n\n`;
+            
+            // Phân tích lý do chính
+            const weights = needsProfile.weights;
+            let mainReason = 'balance'; 
+            let maxWeight = 0;
+            for (const key in weights) {
+                if (key !== 'ram' && key !== 'storage' && key !== 'screen' && weights[key] > maxWeight) {
+                     maxWeight = weights[key];
+                     mainReason = key;
+                }
+            }
+             // Xử lý logic từ khóa đặc biệt (ví dụ: 'ram' có thể là lý do chính)
+            if (needsProfile.userKeywords.includes('đa nhiệm') || needsProfile.userKeywords.includes('lưu trữ nhiều') || needsProfile.userKeywords.includes('màn hình đẹp')) {
+                 if (weights.ram > maxWeight) mainReason = 'ram';
+                 if (weights.storage > maxWeight) mainReason = 'storage';
+                 if (weights.screen > maxWeight) mainReason = 'screen';
+            }
+
+
+            let recommendationDetails = "";
+            let comparisonSentence = "";
+
+            if (runnerUp) {
+                const winnerPerf = (winner.specs.cpu * 2) + winner.specs.gpu + winner.specs.ram;
+                const runnerUpPerf = (runnerUp.specs.cpu * 2) + runnerUp.specs.gpu + runnerUp.specs.ram;
+                const winnerMob = winner.specs.battery * 1.5 + winner.specs.weight * 1.5;
+                const runnerUpMob = runnerUp.specs.battery * 1.5 + runnerUp.specs.weight * 1.5;
+                const winnerPrice = winner.product.price;
+                const runnerUpPrice = runnerUp.product.price;
+
+                switch (mainReason) {
+                    case 'performance':
+                        recommendationDetails = `Với nhu cầu về hiệu năng mạnh mẽ mà bạn đã nhắc đến, <strong>${winner.product.name}</strong> thực sự nổi bật. Với bộ vi xử lý ${winner.product.cpu} (Điểm: ${winner.specs.cpu}/10) và card đồ họa ${winner.product.gpu} (Điểm: ${winner.specs.gpu}/10), nó mang lại sức mạnh vượt trội.`;
+                        comparisonSentence = `Mặc dù <strong>${runnerUp.product.name}</strong> cũng là một lựa chọn tốt, nhưng về khả năng xử lý các tác vụ nặng thì ${winner.product.name} vẫn chiếm ưu thế hơn.`;
+                        break;
+                    case 'mobility':
+                        recommendationDetails = `Nếu ưu tiên hàng đầu của bạn là sự di động và tiện lợi, <strong>${winner.product.name}</strong> với trọng lượng chỉ ${winner.product.weight}kg (Điểm: ${winner.specs.weight}/10) và thời lượng pin ấn tượng (Điểm: ${winner.specs.battery.toFixed(1)}/10) là sự lựa chọn hoàn hảo.`;
+                        comparisonSentence = `So với <strong>${runnerUp.product.name}</strong> (${runnerUp.product.weight}kg), chiếc ${winner.product.name} này mang lại trải nghiệm gọn nhẹ và thời lượng sử dụng dài hơn đáng kể.`;
+                        break;
+                    case 'price':
+                        recommendationDetails = `Đối với yêu cầu về một mức giá phải chăng, <strong>${winner.product.name}</strong> nổi bật với mức giá chỉ ${new Intl.NumberFormat('vi-VN').format(winner.product.price)} VNĐ, cực kỳ kinh tế.`;
+                        if(winnerPrice < runnerUpPrice) {
+                             comparisonSentence = `Bạn có thể tiết kiệm được ${new Intl.NumberFormat('vi-VN').format(runnerUp.product.price - winner.product.price)} VNĐ so với <strong>${runnerUp.product.name}</strong> mà vẫn sở hữu một chiếc máy chất lượng.`;
+                        } else {
+                             comparisonSentence = `Mặc dù <strong>${runnerUp.product.name}</strong> rẻ hơn, ${winner.product.name} mang lại hiệu năng/giá (price/performance) tốt hơn.`;
+                        }
+                        break;
+                    case 'ram':
+                        recommendationDetails = `Để đáp ứng nhu cầu đa nhiệm, <strong>${winner.product.name}</strong> với ${winner.product.ram} (Điểm: ${winner.specs.ram}/10) sẽ giúp bạn làm việc mượt mà.`;
+                        comparisonSentence = `<strong>${runnerUp.product.name}</strong> chỉ có ${runnerUp.product.ram}, có thể sẽ không đủ cho các tác vụ nặng của bạn.`;
+                        break;
+                    case 'storage':
+                        recommendationDetails = `Nếu bạn cần nhiều không gian lưu trữ, <strong>${winner.product.name}</strong> với ${winner.product.storage} là một điểm cộng lớn.`;
+                        comparisonSentence = `So với <strong>${runnerUp.product.name}</strong>, chiếc máy này cung cấp dung lượng lưu trữ rộng rãi hơn.`;
+                        break;
+                    case 'screen':
+                        recommendationDetails = `Với việc bạn quan tâm đến chất lượng màn hình, <strong>${winner.product.name}</strong> tự hào sở hữu màn hình ${winner.product.screen} (Điểm: ${winner.specs.screen}/10) tuyệt đẹp.`;
+                        comparisonSentence = `Chất lượng hiển thị của <strong>${runnerUp.product.name}</strong> cũng tốt, nhưng màn hình của ${winner.product.name} lại có phần nhỉnh hơn.`;
+                        break;
+                    default: // 'balance'
+                        recommendationDetails = `Đây là một chiếc máy có sự cân bằng tuyệt vời giữa hiệu năng (Điểm: ${((winnerPerf/30)*10).toFixed(1)}/10), tính di động (Điểm: ${((winnerMob/30)*10).toFixed(1)}/10) và giá cả.`;
+                        comparisonSentence = `Mặc dù <strong>${runnerUp.product.name}</strong> cũng là một đối thủ đáng gờm, nhưng <strong>${winner.product.name}</strong> mang lại gói tổng thể hài hòa hơn.`;
+                }
+
+                summary += `${recommendationDetails} ${comparisonSentence}\n\n`;
+
+                const winnerAdvantages = [];
+                if (winnerPerf > runnerUpPerf * 1.1 && !mainReason.includes('performance')) winnerAdvantages.push('hiệu năng mạnh mẽ');
+                if (winnerMob > runnerUpMob * 1.1 && !mainReason.includes('mobility')) winnerAdvantages.push('tính di động cao');
+                if (winnerPrice < runnerUpPrice * 0.9 && !mainReason.includes('price')) winnerAdvantages.push('mức giá cạnh tranh');
+                
+                if (winnerAdvantages.length > 0) {
+                    summary += `Ngoài ra, ${winner.product.name} còn có ưu điểm về ${winnerAdvantages.join(', ')}. `;
+                }
+
+            } else {
+                summary += `Đây là lựa chọn duy nhất đáp ứng được các yêu Rõ ràng, <strong>${winner.product.name}</strong> là lựa chọn tốt nhất trong nhóm này cho bạn.`;
+            }
+
+            if (filteredOutProducts.length > 0) {
+                summary += `\n\nCó ${filteredOutProducts.length} sản phẩm khác (ví dụ: ${filteredOutProducts[0].product.name}) đã bị loại vì ${filteredOutProducts[0].filteredOutReason || "không đáp ứng các tiêu chí bạn đưa ra"}.`;
+            }
+
+            summary += `\n\nHãy cùng xem bảng so sánh chi tiết để có cái nhìn tổng quan hơn nhé!`;
+            
+            // Cuối cùng, thay thế \n bằng <br>
+            return summary.replace(/\n/g, '<br>');
         }
-    }
-    // ----- Hết Logic AI Giả lập -----
+    };
 
+    // --- [LỖI 2 ĐÃ SỬA] ---
+    // PHẦN THỰC THI BỊ MẤT ĐÃ ĐƯỢC THÊM LẠI DƯỚI ĐÂY
+
+    // 1. Lấy ID và Dữ liệu sản phẩm (từ biến allProducts TOÀN CỤC)
+    const fallbackData = { id: 'fallback', name: 'Sản phẩm không rõ', price: 0, cpu: 'N/A', ram: 'N/A', storage: 'N/A', gpu: 'N/A', battery: 'N/A', weight: 'N/A', screen: 'N/A' };
+    
+    // 'allProducts' ở đây là biến TOÀN CỤC (global) được load bởi loadProducts()
+    const laptopData = selectedLaptopIDs.map(id => {
+        return allProducts.find(p => p.id === id) || { ...fallbackData, id: id, name: `Laptop ${id}` };
+    });
+
+    // 2. Phân tích nhu cầu
+    const needsProfile = aiHelpers.getNeedsProfile(userPrompt, priorities);
+
+    // 3. Chấm điểm (đã bao gồm Lọc)
+    const scoredProducts = laptopData.map(product => 
+        aiHelpers.scoreProduct(product, needsProfile)
+    );
+
+    // 4. Tạo Tóm tắt (NLG)
+    const aiSummary = aiHelpers.generateSummary(scoredProducts, needsProfile, userPrompt);
+
+    // 5. Tạo Bảng so sánh
     const formatPrice = (price) => {
          const pPrice = parseFloat(price);
          return isNaN(pPrice) ? "Liên hệ" : new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(pPrice);
     };
-
+    
+    const laptopNames = laptopData.map(ld => ld.name);
+    
     const mockComparisonDetails = [
-        { "feature": "CPU", [id1]: laptopData1.cpu, [id2]: laptopData2.cpu },
-        { "feature": "RAM", [id1]: laptopData1.ram, [id2]: laptopData2.ram },
-        { "feature": "GPU", [id1]: laptopData1.gpu, [id2]: laptopData2.gpu },
-        { "feature": "Lưu trữ", [id1]: laptopData1.storage, [id2]: laptopData2.storage },
-        { "feature": "Giá", [id1]: formatPrice(laptopData1.price), [id2]: formatPrice(laptopData2.price) },
-        { "feature": "Cân nặng", [id1]: laptopData1.weight, [id2]: laptopData2.weight },
-        { "feature": "Pin", [id1]: laptopData1.battery, [id2]: laptopData2.battery },
-        { "feature": "Màn hình", [id1]: laptopData1.screen, [id2]: laptopData2.screen }
+        { "feature": "CPU" },
+        { "feature": "RAM" },
+        { "feature": "GPU" },
+        { "feature": "Lưu trữ" },
+        { "feature": "Giá" },
+        { "feature": "Cân nặng" },
+        { "feature": "Pin" },
+        { "feature": "Màn hình" }
     ];
 
-    if (laptopData3) {
-        mockComparisonDetails.forEach(item => {
-            const key = item.feature;
-            if (key === "Giá") item[id3] = formatPrice(laptopData3.price);
-            else if (key === "CPU") item[id3] = laptopData3.cpu;
-            else if (key === "RAM") item[id3] = laptopData3.ram;
-            else if (key === "GPU") item[id3] = laptopData3.gpu;
-            else if (key === "Lưu trữ") item[id3] = laptopData3.storage;
-            else if (key === "Cân nặng") item[id3] = laptopData3.weight;
-            else if (key === "Pin") item[id3] = laptopData3.battery;
-            else if (key === "Màn hình") item[id3] = laptopData3.screen;
+    mockComparisonDetails.forEach(item => {
+        selectedLaptopIDs.forEach((id, index) => {
+            const product = laptopData[index];
+            const feature = item.feature.toLowerCase();
+            
+            // Gán giá trị dựa trên tên 'feature', đảm bảo an toàn
+            switch (feature) {
+                case 'cpu': item[id] = product.cpu || 'N/A'; break;
+                case 'ram': item[id] = product.ram || 'N/A'; break;
+                case 'gpu': item[id] = product.gpu || 'N/A'; break;
+                case 'lưu trữ': item[id] = product.storage || 'N/A'; break;
+                case 'giá': item[id] = formatPrice(product.price); break;
+                case 'cân nặng': item[id] = product.weight || 'N/A'; break;
+                case 'pin': item[id] = product.battery || 'N/A'; break;
+                case 'màn hình': item[id] = product.screen || 'N/A'; break;
+            }
         });
-    }
+    });
 
+    // 6. Trả về kết quả
     return {
         summary: aiSummary,
-        laptop_names: [laptopData1.name, laptopData2.name, laptopData3?.name].filter(Boolean),
+        laptop_names: laptopNames, 
         comparison_details: mockComparisonDetails
     };
 }
+
 
 /**
  * Cập nhật trạng thái (text) của thanh trượt.

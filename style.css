@@ -227,9 +227,9 @@ h2, h3 {
 #ai-summary {
     font-size: 1.15rem;
     line-height: 1.6;
-    color: #B7E5CD; /* Darker green for success alert text */
+    color: #0b502c; /* Darker green for success alert text */
     background-color: #e6ffed; /* Lighter green for success alert */
-    border-color: #badbcc;
+    border-color: #9cbeaf;
 }
 
 /* Comparison Table */
